@@ -1,7 +1,7 @@
 import { getFallbackProvider, getProvider } from '@/lib/market/providers';
 import { getMarketStatus, type MarketStatus } from '@/lib/market/market-status';
 import { normalizeSymbol, isValidSymbol } from '@/lib/market/provider';
-import { fail, type DataOrigin, type FailureReason, type Result } from '@/lib/market/result';
+import type { DataOrigin, FailureReason, Result } from '@/lib/market/result';
 import {
   DEFAULT_RANGE,
   type HistoryRange,
@@ -20,23 +20,50 @@ import {
  * que é derivado (estatísticas do período).
  */
 
-export interface MarketOverview {
-  readonly instruments: readonly Instrument[];
-  readonly origin: DataOrigin;
-  readonly status: MarketStatus;
+/**
+ * O estado do mercado é união discriminada, e não um objeto que às vezes lança.
+ * Antes, a impossibilidade de o snapshot falhar era expressa com `throw` — o
+ * que contradizia o princípio do `Result` e, na prática, entregava a tela de
+ * erro do framework. Agora a UI recebe um valor que ela sabe desenhar.
+ */
+export type MarketOverview =
+  | {
+      readonly ok: true;
+      readonly instruments: readonly Instrument[];
+      readonly origin: DataOrigin;
+      readonly status: MarketStatus;
+    }
+  | { readonly ok: false; readonly reason: FailureReason; readonly status: MarketStatus };
+
+export type InstrumentDetail =
+  | {
+      readonly ok: true;
+      readonly instrument: Instrument;
+      readonly origin: DataOrigin;
+      readonly status: MarketStatus;
+      /** Falha da série degrada só a seção do gráfico, não a página. */
+      readonly series: Result<Series>;
+      readonly stats: SeriesStats | null;
+    }
+  | {
+      readonly ok: false;
+      readonly reason: FailureReason;
+      readonly status: MarketStatus;
+    };
+
+export interface WatchlistRows {
+  readonly overview: MarketOverview;
+  readonly rows: readonly Instrument[];
+  readonly missing: readonly string[];
 }
 
-export interface InstrumentDetail {
-  readonly instrument: Instrument;
-  readonly origin: DataOrigin;
-  readonly status: MarketStatus;
-  /** Falha da série degrada só a seção do gráfico, não a página. */
-  readonly series: Result<Series>;
-  readonly stats: SeriesStats | null;
-}
-
-/** Uma tentativa no provider configurado, e o snapshot se ela falhar. */
-async function withFallback<T>(
+/**
+ * Uma tentativa no provider configurado, e o snapshot se ela falhar.
+ *
+ * Exportada porque é a regra de negócio do fallback, e ramo de fallback sem
+ * teste é ramo que ninguém sabe se funciona.
+ */
+export async function withFallback<T>(
   attempt: () => Promise<Result<T>>,
   fallback: () => Promise<Result<T>>,
 ): Promise<Result<T>> {
@@ -55,16 +82,16 @@ export async function getMarketOverview(now: Date = new Date()): Promise<MarketO
     () => getFallbackProvider().listUniverse(),
   );
 
-  const status = getMarketStatus(now);
+  return composeOverview(result, getMarketStatus(now));
+}
 
-  // O snapshot versionado sempre responde, então a tabela nunca fica sem dado.
-  if (!result.ok) {
-    const last = await getFallbackProvider().listUniverse();
-    if (!last.ok) throw new Error('Snapshot de fallback indisponível: isso é bug, não estado.');
-    return { instruments: last.data, origin: last.origin, status };
-  }
-
-  return { instruments: result.data, origin: result.origin, status };
+/** Composição pura, para os dois ramos serem testáveis sem rede nem ambiente. */
+export function composeOverview(
+  result: Result<readonly Instrument[]>,
+  status: MarketStatus,
+): MarketOverview {
+  if (!result.ok) return { ok: false, reason: result.reason, status };
+  return { ok: true, instruments: result.data, origin: result.origin, status };
 }
 
 export function computeStats(series: Series): SeriesStats | null {
@@ -100,13 +127,16 @@ export async function getInstrumentDetail(
   rawSymbol: string,
   range: HistoryRange = DEFAULT_RANGE,
   now: Date = new Date(),
-): Promise<InstrumentDetail | { readonly notFound: true; readonly reason: FailureReason }> {
+): Promise<InstrumentDetail> {
+  const status = getMarketStatus(now);
   const symbol = normalizeSymbol(rawSymbol);
-  if (!isValidSymbol(symbol)) return { notFound: true, reason: 'invalid-symbol' };
+  if (!isValidSymbol(symbol)) return { ok: false, reason: 'invalid-symbol', status };
 
   const overview = await getMarketOverview(now);
+  if (!overview.ok) return overview;
+
   const instrument = overview.instruments.find((candidate) => candidate.symbol === symbol);
-  if (!instrument) return { notFound: true, reason: 'not-found' };
+  if (!instrument) return { ok: false, reason: 'not-found', status: overview.status };
 
   const provider = getProvider();
   const series = await withFallback(
@@ -115,6 +145,7 @@ export async function getInstrumentDetail(
   );
 
   return {
+    ok: true,
     instrument,
     origin: overview.origin,
     status: overview.status,
@@ -133,22 +164,15 @@ export async function getInstrumentDetail(
 export async function getWatchlistRows(
   symbols: readonly string[],
   now: Date = new Date(),
-): Promise<{
-  readonly rows: readonly Instrument[];
-  readonly missing: readonly string[];
-  readonly origin: DataOrigin;
-  readonly status: MarketStatus;
-}> {
+): Promise<WatchlistRows> {
   const overview = await getMarketOverview(now);
   const wanted = new Set(symbols.map(normalizeSymbol));
+
+  if (!overview.ok) return { overview, rows: [], missing: [...wanted] };
 
   const rows = overview.instruments.filter((instrument) => wanted.has(instrument.symbol));
   const found = new Set(rows.map((row) => row.symbol));
   const missing = [...wanted].filter((symbol) => !found.has(symbol));
 
-  return { rows, missing, origin: overview.origin, status: overview.status };
-}
-
-export function unavailable(reason: FailureReason): Result<never> {
-  return fail(reason);
+  return { overview, rows, missing };
 }

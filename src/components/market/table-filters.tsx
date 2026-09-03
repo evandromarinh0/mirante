@@ -21,15 +21,22 @@ const KINDS: ReadonlyArray<{ readonly value: KindFilter; readonly label: string 
 export function TableFilters({
   state,
   basePath,
+  resultCount,
   keepParams = {},
 }: {
   readonly state: TableState;
   readonly basePath: string;
+  readonly resultCount: number;
   readonly keepParams?: Readonly<Record<string, string>>;
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <SearchField state={state} basePath={basePath} keepParams={keepParams} />
+      <SearchField
+        state={state}
+        basePath={basePath}
+        resultCount={resultCount}
+        keepParams={keepParams}
+      />
 
       <div
         role="group"

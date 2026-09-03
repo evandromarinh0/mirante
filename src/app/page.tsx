@@ -2,6 +2,7 @@ import { InstrumentTable } from '@/components/market/instrument-table';
 import { Pagination } from '@/components/market/pagination';
 import { TableFilters } from '@/components/market/table-filters';
 import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
+import { SectionError } from '@/components/state/error-state';
 import { EmptyState } from '@/components/state/empty-state';
 import { Container } from '@/components/ui/container';
 import {
@@ -33,8 +34,23 @@ export default async function MarketPage({
 }) {
   const params = await searchParams;
   const state = parseTableState(params);
-  const { instruments, origin, status } = await getMarketOverview();
+  const overview = await getMarketOverview();
 
+  // Falha aqui é estado, não exceção: o cabeçalho e o status do mercado
+  // continuam na tela, e só a tabela degrada.
+  if (!overview.ok) {
+    return (
+      <Container className="flex flex-col gap-5">
+        <header className="flex flex-col gap-2">
+          <h1 className="text-2xl">Mercado</h1>
+          <DataStamp origin={null} status={overview.status} />
+        </header>
+        <SectionError reason={overview.reason} subject="A tabela de mercado" />
+      </Container>
+    );
+  }
+
+  const { instruments, origin, status } = overview;
   const matching = applyTableState(instruments, state);
   // Paginar no servidor, não virtualizar no cliente: o universo passa de mil
   // ativos, e mandar todos para o navegador para esconder 95% deles seria
@@ -51,7 +67,7 @@ export default async function MarketPage({
 
       <DataOriginNotice origin={origin} />
 
-      <TableFilters state={state} basePath="/" />
+      <TableFilters state={state} basePath="/" resultCount={matching.length} />
 
       {page.rows.length === 0 ? (
         <EmptyState

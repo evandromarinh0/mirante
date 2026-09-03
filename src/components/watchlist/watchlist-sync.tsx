@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { WATCHLIST_QUERY_KEY } from '@/lib/constants';
+import { parseWatchlistParam, sameWatchlist, toWatchlistParam } from '@/lib/market/watchlist-url';
 import { useWatchlistContext } from './watchlist-provider';
 
 /**
@@ -24,17 +25,22 @@ export function WatchlistSync() {
   const [adopted, setAdopted] = useState(false);
 
   const shared = params.get(WATCHLIST_QUERY_KEY);
-  const sharedSymbols = shared ? shared.split(',').filter(Boolean) : [];
+  const sharedSymbols = parseWatchlistParam(shared ?? undefined);
 
   useEffect(() => {
     if (!hydrated) return;
     if (shared !== null) return;
     if (symbols.length === 0) return;
-    router.replace(`/lista?${WATCHLIST_QUERY_KEY}=${symbols.join(',')}`, { scroll: false });
+    router.replace(`/lista?${WATCHLIST_QUERY_KEY}=${toWatchlistParam(symbols)}`, { scroll: false });
   }, [hydrated, router, shared, symbols]);
 
-  const differs =
-    sharedSymbols.length > 0 && sharedSymbols.join(',') !== [...symbols].sort().join(',');
+  /**
+   * Comparação por conjunto, não por string concatenada. A versão anterior
+   * comparava a ordem da URL com a lista ordenada alfabeticamente, então duas
+   * listas idênticas em ordem diferente eram declaradas diferentes — e a pessoa
+   * era avisada de que a própria lista tinha vindo de um link de outra pessoa.
+   */
+  const differs = sharedSymbols.length > 0 && !sameWatchlist(sharedSymbols, symbols);
 
   if (!hydrated || !differs || adopted) return null;
 

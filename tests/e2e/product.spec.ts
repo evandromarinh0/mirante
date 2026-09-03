@@ -98,6 +98,46 @@ test.describe('lista de acompanhamento', () => {
     await expect(page.getByRole('link', { name: 'Ver o mercado' })).toBeVisible();
   });
 
+  test('marcar dois ativos em ordem não alfabética não acusa link compartilhado', async ({
+    page,
+  }) => {
+    // O caso que escapou da suíte anterior: com um ativo só, qualquer
+    // comparação passa. Com dois em ordem não alfabética, a versão antiga
+    // dizia que a lista da pessoa tinha vindo do link de outra.
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await page.getByRole('button', { name: 'Acompanhar ADSH11' }).click();
+
+    await page.goto('/lista');
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toBeVisible();
+
+    await expect(page.getByText('veio de um link compartilhado')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Adotar esta lista' })).toHaveCount(0);
+
+    // Nem depois de recarregar, quando a URL já foi escrita pela sincronização.
+    await page.reload();
+    await expect(page.getByText('veio de um link compartilhado')).toHaveCount(0);
+  });
+
+  test('link com a mesma lista em outra ordem também não acusa diferença', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await page.getByRole('button', { name: 'Acompanhar ADSH11' }).click();
+
+    await page.goto('/lista?ativos=ADSH11,HGLG11');
+    await expect(page.getByText('veio de um link compartilhado')).toHaveCount(0);
+  });
+
+  test('lista de verdade diferente continua sendo sinalizada', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+
+    await page.goto('/lista?ativos=MXRF11,KNRI11');
+    await expect(page.getByText('veio de um link compartilhado')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Adotar esta lista' })).toBeVisible();
+  });
+
   test('link compartilhado reproduz a lista de outra pessoa', async ({ page }) => {
     await page.goto('/lista?ativos=MXRF11,KNRI11');
     await expect(page.getByRole('link', { name: 'MXRF11' })).toBeVisible();
@@ -183,6 +223,50 @@ test.describe('paginação e busca instantânea', () => {
     await expect(page).toHaveURL(/busca=HGLG11/);
     await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
     await context.close();
+  });
+});
+
+test.describe('erro e acessibilidade da busca', () => {
+  test('a busca anuncia o resultado em região viva, não o processo', async ({ page }) => {
+    await page.goto('/');
+    const live = page.locator('[role="status"][aria-live="polite"]');
+
+    // Silêncio antes da primeira busca: anunciar a contagem inicial no
+    // carregamento seria ruído.
+    await expect(live).toHaveText('');
+
+    await page.getByLabel('Buscar por código ou nome').fill('HGLG');
+    await expect(live).toContainText('encontrado');
+    await expect(live).toContainText('HGLG');
+
+    await page.getByLabel('Buscar por código ou nome').fill('ZZZZ9');
+    await expect(live).toContainText('Nenhum ativo encontrado');
+  });
+
+  test('a fronteira de erro desenha o estado do produto, não a tela do framework', async ({
+    page,
+  }) => {
+    // Sem rota de diagnóstico, o que dá para verificar é o oposto: nenhuma
+    // rota do produto cai na tela genérica do Next.
+    for (const route of ['/', '/lista', '/ativo/PETR4', '/sobre']) {
+      await page.goto(route);
+      await expect(page.getByText('Application error')).toHaveCount(0);
+      await expect(page.getByTestId('disclaimer')).toBeVisible();
+    }
+  });
+});
+
+test.describe('indexação', () => {
+  test('robots bloqueia tudo enquanto não houver domínio', async ({ page }) => {
+    const response = await page.goto('/robots.txt');
+    expect(await response?.text()).toContain('Disallow: /');
+  });
+
+  test('toda rota carrega noindex no cabeçalho de metadata', async ({ page }) => {
+    for (const route of ['/', '/lista', '/sobre', '/ativo/PETR4']) {
+      await page.goto(route);
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    }
   });
 });
 

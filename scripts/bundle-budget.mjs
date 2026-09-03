@@ -11,7 +11,8 @@
  * tabela e da lista, e ainda assim é apertado — que é o motivo de não entrar
  * biblioteca de gráfico.
  */
-import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
@@ -24,11 +25,48 @@ const BUDGETS = {
 
 const SCRIPT_TAG = /<script\b[^>]*src="([^"]+)"[^>]*>/g;
 
+/**
+ * A porta tem de estar livre antes de subir.
+ *
+ * Sem esta checagem, um servidor antigo ainda escutando responde no lugar do
+ * nosso, servindo HTML de um build cujos chunks já não existem em disco — e o
+ * orçamento passava anunciando 0,0 KB. Portão que passa medindo nada é pior que
+ * portão nenhum.
+ */
+async function assertPortFree() {
+  await new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once('error', (error) =>
+      reject(
+        new Error(
+          `porta ${PORT} ocupada (${error.code}). Provavelmente um "next start" órfão de uma execução anterior — encerre-o antes de medir.`,
+        ),
+      ),
+    );
+    probe.once('listening', () => probe.close(resolve));
+    probe.listen(PORT, '127.0.0.1');
+  });
+}
+
+await assertPortFree();
+
 const server = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, MARKET_PROVIDER: 'fixture' },
   stdio: 'ignore',
   shell: process.platform === 'win32',
 });
+
+/**
+ * `kill()` no Windows encerra o `cmd.exe` e deixa o Node filho escutando. Era a
+ * origem dos servidores órfãos: cada execução deixava um para trás.
+ */
+function stopServer() {
+  if (process.platform === 'win32' && server.pid) {
+    spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' });
+    return;
+  }
+  server.kill();
+}
 
 async function waitForServer(timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
@@ -67,7 +105,24 @@ try {
       .filter(([tag]) => !/noModule/i.test(tag))
       .map(([, src]) => src);
 
+    if (sources.length === 0) {
+      console.error(
+        `FALHA ${route} — nenhum script no HTML. O servidor respondeu o que era esperado?`,
+      );
+      failed = true;
+      continue;
+    }
+
     const kb = gzipKb(sources);
+
+    if (kb === 0) {
+      console.error(
+        `FALHA ${route} — ${sources.length} scripts no HTML e nenhum encontrado em .next. Build desatualizado ou servidor de outra origem.`,
+      );
+      failed = true;
+      continue;
+    }
+
     const over = kb > budget;
     if (over) failed = true;
     console.log(
@@ -75,7 +130,7 @@ try {
     );
   }
 } finally {
-  server.kill();
+  stopServer();
 }
 
 process.exit(failed ? 1 : 0);

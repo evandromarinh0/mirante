@@ -46,7 +46,26 @@ export default async function InstrumentPage({ params, searchParams }: PageProps
   const range: HistoryRange = isHistoryRange(periodo) ? periodo : DEFAULT_RANGE;
 
   const detail = await getInstrumentDetail(symbol, range);
-  if ('notFound' in detail) notFound();
+
+  if (!detail.ok) {
+    // Ticker inválido ou inexistente é 404 de verdade. Fonte indisponível não
+    // é erro de quem visita: a página aparece, dizendo o que faltou.
+    if (detail.reason === 'not-found' || detail.reason === 'invalid-symbol') notFound();
+
+    return (
+      <Container className="flex flex-col gap-5">
+        <nav aria-label="Trilha" className="text-text-muted text-xs">
+          <Link href="/" className="hover:text-text underline decoration-1 underline-offset-2">
+            Mercado
+          </Link>
+          <span aria-hidden="true"> / </span>
+          <span className="font-mono">{symbol}</span>
+        </nav>
+        <DataStamp origin={null} status={detail.status} />
+        <SectionError reason={detail.reason} subject={`Os dados de ${symbol}`} />
+      </Container>
+    );
+  }
 
   const { instrument, origin, status, series, stats } = detail;
 

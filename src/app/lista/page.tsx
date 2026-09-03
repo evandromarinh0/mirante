@@ -2,12 +2,14 @@ import { Suspense } from 'react';
 import { InstrumentTable } from '@/components/market/instrument-table';
 import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { EmptyState } from '@/components/state/empty-state';
+import { SectionError } from '@/components/state/error-state';
 import { TableSkeleton } from '@/components/state/skeleton';
 import { Container } from '@/components/ui/container';
 import { ShareListButton } from '@/components/watchlist/share-list-button';
 import { WatchlistSync } from '@/components/watchlist/watchlist-sync';
 import { WATCHLIST_QUERY_KEY } from '@/lib/constants';
 import { applyTableState, parseTableState, type RawSearchParams } from '@/lib/market/table-state';
+import { parseWatchlistParam, toWatchlistParam } from '@/lib/market/watchlist-url';
 import { getWatchlistRows } from '@/lib/services/market-service';
 
 /**
@@ -30,8 +32,9 @@ export default async function WatchlistPage({
   searchParams: Promise<RawSearchParams>;
 }) {
   const params = await searchParams;
-  const raw = params[WATCHLIST_QUERY_KEY];
-  const symbols = (Array.isArray(raw) ? (raw[0] ?? '') : (raw ?? '')).split(',').filter(Boolean);
+  // Mesma regra que o componente de sincronização usa: validada, deduplicada e
+  // sem depender da ordem. Duplicar essa leitura foi a origem do bug da lista.
+  const symbols = parseWatchlistParam(params[WATCHLIST_QUERY_KEY]);
 
   return (
     <Container className="flex flex-col gap-5">
@@ -70,18 +73,28 @@ async function WatchlistTable({
   readonly symbols: readonly string[];
   readonly tableState: RawSearchParams;
 }) {
-  const { rows, missing, origin, status } = await getWatchlistRows(symbols);
+  const { overview, rows, missing } = await getWatchlistRows(symbols);
+
+  if (!overview.ok) {
+    return (
+      <>
+        <DataStamp origin={null} status={overview.status} />
+        <SectionError reason={overview.reason} subject="Os preços da sua lista" />
+      </>
+    );
+  }
+
   const state = parseTableState(tableState);
   const ordered = applyTableState(rows, state);
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <DataStamp origin={origin} status={status} />
+        <DataStamp origin={overview.origin} status={overview.status} />
         <ShareListButton symbols={rows.map((row) => row.symbol)} />
       </div>
 
-      <DataOriginNotice origin={origin} />
+      <DataOriginNotice origin={overview.origin} />
 
       {ordered.length === 0 ? (
         <EmptyState
@@ -95,7 +108,7 @@ async function WatchlistTable({
           state={state}
           basePath="/lista"
           total={ordered.length}
-          keepParams={{ [WATCHLIST_QUERY_KEY]: symbols.join(',') }}
+          keepParams={{ [WATCHLIST_QUERY_KEY]: toWatchlistParam(symbols) }}
         />
       )}
 

@@ -15,7 +15,8 @@ import { isLiveData, type DataOrigin } from '@/lib/market/result';
  */
 
 interface DataStampProps {
-  readonly origin: DataOrigin;
+  /** Nulo quando nem o fallback respondeu: a sessão ainda é informação. */
+  readonly origin: DataOrigin | null;
   readonly status: MarketStatus;
   readonly now?: Date;
   readonly className?: string;
@@ -33,7 +34,7 @@ const SOURCE_LABEL = {
 } as const;
 
 export function DataStamp({ origin, status, now = new Date(), className }: DataStampProps) {
-  const live = isLiveData(origin);
+  const live = origin !== null && isLiveData(origin);
   const closedSince = `fechamento de ${formatWeekday(status.lastClose)}, ${formatDayMonth(
     status.lastClose,
   )}, ${formatClock(status.lastClose)}`;
@@ -51,12 +52,13 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
         {PHASE_LABEL[status.phase]}
       </span>
 
-      <span aria-hidden="true">·</span>
+      {origin !== null && <span aria-hidden="true">·</span>}
 
       {/* Três frases distintas, porque três situações distintas. Dizer
           "fechamento de quarta" ao lado de "mercado aberto" — o que acontecia
-          quando o dado não era ao vivo — é contradição na cara de quem lê. */}
-      {!live ? (
+          quando o dado não era ao vivo — é contradição na cara de quem lê.
+          Sem procedência nenhuma, o carimbo diz só a fase da sessão. */}
+      {origin === null ? null : !live ? (
         <span>
           capturado em{' '}
           <time dateTime={origin.fetchedAt}>
@@ -72,14 +74,14 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
         <span>{closedSince}</span>
       )}
 
-      {!live && origin.provider !== 'brapi' && (
+      {origin !== null && !live && origin.provider !== 'brapi' && (
         <>
           <span aria-hidden="true">·</span>
           <span className="text-negative font-medium">{SOURCE_LABEL[origin.provider]}</span>
         </>
       )}
 
-      {!live && origin.provider === 'brapi' && (
+      {origin !== null && !live && origin.provider === 'brapi' && (
         <>
           <span aria-hidden="true">·</span>
           <span className="text-negative font-medium">dado de reserva</span>
@@ -97,8 +99,8 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
  * velho apresentado como fresco. O segundo caso é o que dói mais, porque é
  * silencioso.
  */
-export function DataOriginNotice({ origin }: { readonly origin: DataOrigin }) {
-  if (isLiveData(origin)) return null;
+export function DataOriginNotice({ origin }: { readonly origin: DataOrigin | null }) {
+  if (origin === null || isLiveData(origin)) return null;
 
   const captured = (
     <time dateTime={origin.fetchedAt}>

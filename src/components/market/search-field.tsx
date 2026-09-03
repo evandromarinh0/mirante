@@ -25,18 +25,29 @@ import { PARAM, tableHref, type TableState } from '@/lib/market/table-state';
 
 const DEBOUNCE_MS = 250;
 
+function announcement(count: number, query: string): string {
+  const subject = query ? ` para "${query}"` : '';
+  if (count === 0) return `Nenhum ativo encontrado${subject}.`;
+  if (count === 1) return `1 ativo encontrado${subject}.`;
+  return `${count.toLocaleString('pt-BR')} ativos encontrados${subject}.`;
+}
+
 export function SearchField({
   state,
   basePath,
+  resultCount,
   keepParams = {},
 }: {
   readonly state: TableState;
   readonly basePath: string;
+  /** Quantos ativos a busca atual encontrou — é o que a região viva anuncia. */
+  readonly resultCount: number;
   readonly keepParams?: Readonly<Record<string, string>>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [value, setValue] = useState(state.query);
+  const [searched, setSearched] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
@@ -72,6 +83,7 @@ export function SearchField({
     // Buscar sempre volta para a primeira página: continuar na página 7 de um
     // resultado que encolheu não significa nada.
     const trimmed = query.trim();
+    setSearched(true);
     setSync((current) => ({ ...current, navigated: trimmed }));
     const href = tableHref({ ...state, query: trimmed, page: 1 }, basePath, keepParams);
     startTransition(() => router.replace(href, { scroll: false }));
@@ -127,13 +139,28 @@ export function SearchField({
         Buscar
       </button>
 
+      {/* Indicador visual: só opacidade muda, então fica fora da leitura de tela. */}
       <span
-        aria-live="polite"
+        aria-hidden="true"
         className={`text-text-muted shrink-0 text-xs transition-opacity duration-[var(--duration-fast)] ${
           pending ? 'opacity-100' : 'opacity-0'
         }`}
       >
         atualizando
+      </span>
+
+      {/*
+        A região viva anuncia o **resultado**, não o processo. A versão anterior
+        embrulhava o texto fixo "atualizando" e só trocava a opacidade — região
+        viva anuncia mudança de conteúdo, então ela nunca dizia nada.
+
+        A consulta entra na mensagem de propósito: duas buscas seguidas com a
+        mesma contagem produziriam texto idêntico, e texto idêntico não é
+        reanunciado. Fica em silêncio até a primeira busca, para não anunciar a
+        contagem inicial no carregamento da página.
+      */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {searched && !pending ? announcement(resultCount, state.query) : ''}
       </span>
     </form>
   );
