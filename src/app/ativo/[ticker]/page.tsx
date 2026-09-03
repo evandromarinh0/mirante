@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SectionError } from '@/components/state/error-state';
 import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
+import { PriceChart } from '@/components/market/price-chart';
 import { SeriesTable } from '@/components/market/series-table';
 import { Container } from '@/components/ui/container';
 import { ValueChange } from '@/components/ui/value-change';
@@ -121,6 +122,8 @@ export default async function InstrumentPage({ params, searchParams }: PageProps
 
         {series.ok ? (
           <>
+            {stats && <PriceChart series={series.data} stats={stats} symbol={instrument.symbol} />}
+
             {stats && (
               <dl className="border-border grid grid-cols-2 gap-x-6 gap-y-3 rounded-md border p-4 sm:grid-cols-3 lg:grid-cols-6">
                 <Stat label="Abertura" value={formatCurrency(stats.open)} />
@@ -141,7 +144,14 @@ export default async function InstrumentPage({ params, searchParams }: PageProps
                 <Stat label="Volume médio" value={formatVolume(stats.averageVolume)} />
               </dl>
             )}
-            <SeriesTable series={series.data} />
+            <details className="border-border rounded-md border">
+              <summary className="text-text-secondary hover:text-text hit-area flex cursor-pointer items-center px-3 text-sm font-medium">
+                Ver como tabela
+              </summary>
+              <div className="border-border border-t p-3">
+                <SeriesTable series={series.data} />
+              </div>
+            </details>
           </>
         ) : (
           <SectionError reason={series.reason} subject="O histórico deste ativo" />

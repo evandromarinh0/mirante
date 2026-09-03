@@ -114,7 +114,7 @@ writes. What needs protecting is the token and the integrity of what renders.
 - **The browser never talks to the data source.** No proxy route, no client
   fetch. Reads happen in Server Components, which is also why quota depends on
   revalidation frequency rather than visitor count.
-- **CSP with a per-request nonce** (`src/middleware.ts`), no `unsafe-inline` for
+- **CSP with a per-request nonce** (`src/proxy.ts`), no `unsafe-inline` for
   scripts, no third-party script, font or analytics.
 - **Every ticker is validated** against `^[A-Z]{4}\d{1,2}$` before leaving the
   app, so a URL parameter cannot become an arbitrary upstream path or poison a

@@ -255,8 +255,11 @@ O estilo é parte da identidade, não detalhe de implementação:
 - **Sem preenchimento de área na comparação** — quatro áreas sobrepostas viram
   sopa. Na série única, área opcional em `--color-chart-ink` a 6% de opacidade,
   só para dar peso ao traço.
-- Grade horizontal apenas, em `--color-chart-grid`, no máximo cinco linhas. Sem
-  grade vertical.
+- Grade horizontal apenas, em `--color-chart-grid`, no máximo **seis** linhas,
+  com passo na família 1-2-5. Sem grade vertical. Eram cinco na primeira
+  redação; a implementação mostrou que o teto de cinco força o passo a saltar de
+  2 para 5 e colapsa uma faixa de dez reais em duas linhas — menos legível, não
+  mais limpo.
 - Crosshair de 1px tracejado em `--color-border-strong`, com o valor lido em
   mono junto do eixo.
 - Ponto marcado só no hover ou no foco — nunca um marcador por observação.

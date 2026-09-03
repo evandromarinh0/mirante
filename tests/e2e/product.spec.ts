@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 
 /**
  * O que o e2e cobre aqui é comportamento que teste unitário não alcança: a URL
- * ser de verdade a fonte de verdade, a lista sobreviver ao recarregar, e a
- * página não estourar 320px.
+ * ser de verdade a fonte de verdade, a lista sobreviver ao recarregar, o
+ * gráfico existir antes do JavaScript, e a página não estourar 320px.
  *
  * Roda com o provider de fixture: sem rede, sem cota, e determinístico.
  */
@@ -72,7 +72,7 @@ test.describe('a URL é a fonte de verdade', () => {
     await page.goto('/ativo/PETR4');
     await page.getByRole('link', { name: '1 mês' }).click();
     await expect(page).toHaveURL(/periodo=1mo/);
-    await expect(page.getByText(/dias de negociação/)).toBeVisible();
+    await expect(page.getByRole('img', { name: /Preço de PETR4, 1 mês/ })).toBeVisible();
   });
 });
 
@@ -102,6 +102,62 @@ test.describe('lista de acompanhamento', () => {
     await page.goto('/lista?ativos=MXRF11,KNRI11');
     await expect(page.getByRole('link', { name: 'MXRF11' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'KNRI11' })).toBeVisible();
+  });
+});
+
+test.describe('gráfico', () => {
+  test('aparece no primeiro HTML, antes de qualquer JavaScript', async ({ browser }) => {
+    // Gráfico que só existe depois da hidratação é retângulo vazio no primeiro
+    // paint. Sem JavaScript, a linha tem de estar lá.
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/ativo/PETR4');
+    await expect(page.getByRole('img', { name: /Preço de PETR4/ })).toBeVisible();
+    await expect(page.locator('svg path[stroke]').first()).toBeVisible();
+    await context.close();
+  });
+
+  test('tem resumo textual com os números do período', async ({ page }) => {
+    await page.goto('/ativo/PETR4');
+    const label = await page
+      .getByRole('img', { name: /Preço de PETR4/ })
+      .getAttribute('aria-label');
+
+    expect(label).toMatch(/3 meses/);
+    expect(label).toMatch(/R\$/);
+    expect(label).toMatch(/(alta|baixa) de/);
+    expect(label).toMatch(/Mínima .*máxima/);
+  });
+
+  test('as setas do teclado andam ponto a ponto e anunciam o valor', async ({ page }) => {
+    await page.goto('/ativo/PETR4');
+    await page.getByRole('img', { name: /Preço de PETR4/ }).focus();
+
+    const live = page.locator('[aria-live="polite"]');
+    await expect(live).toContainText('R$');
+
+    const atEnd = await live.textContent();
+    await page.keyboard.press('ArrowLeft');
+    await expect(live).not.toHaveText(atEnd ?? '');
+
+    await page.keyboard.press('Home');
+    const atStart = await live.textContent();
+    await page.keyboard.press('End');
+    await expect(live).not.toHaveText(atStart ?? '');
+  });
+
+  test('ver como tabela expõe a mesma série', async ({ page }) => {
+    await page.goto('/ativo/PETR4');
+    const table = page.getByRole('table').filter({ hasText: 'Fechamento' });
+
+    await expect(table).toBeHidden();
+    await page.getByText('Ver como tabela').click();
+    await expect(table).toBeVisible();
+  });
+
+  test('declara que a escala não começa em zero', async ({ page }) => {
+    await page.goto('/ativo/PETR4');
+    await expect(page.getByText('Escala não começa em zero.')).toBeVisible();
   });
 });
 

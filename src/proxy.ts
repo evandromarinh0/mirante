@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 /**
  * CSP com nonce por requisição.
  *
+ * Fica em `proxy.ts`: no Next 16 a convenção `middleware` está deprecada.
+ *
  * Não dá para servir esta política de `next.config.ts`: o App Router entrega
  * conteúdo em streaming e usa **script inline** para encaixar cada trecho no
  * lugar. Uma CSP estática com `script-src 'self'` bloqueia esse script, e o
@@ -33,7 +35,7 @@ function buildCsp(nonce: string): string {
   ].join('; ');
 }
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const nonce = crypto.randomUUID();
   const csp = buildCsp(nonce);
 
