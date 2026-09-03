@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { InstrumentTable } from '@/components/market/instrument-table';
-import { DataStamp, FallbackNotice } from '@/components/state/data-stamp';
+import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { EmptyState } from '@/components/state/empty-state';
 import { TableSkeleton } from '@/components/state/skeleton';
 import { Container } from '@/components/ui/container';
@@ -81,7 +81,7 @@ async function WatchlistTable({
         <ShareListButton symbols={rows.map((row) => row.symbol)} />
       </div>
 
-      <FallbackNotice origin={origin} />
+      <DataOriginNotice origin={origin} />
 
       {ordered.length === 0 ? (
         <EmptyState

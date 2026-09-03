@@ -1,14 +1,17 @@
 import { cn } from '@/lib/cn';
 import { formatClock, formatDayMonth, formatRelativeTime, formatWeekday } from '@/lib/format';
 import type { MarketStatus } from '@/lib/market/market-status';
-import type { DataOrigin } from '@/lib/market/result';
+import { isLiveData, type DataOrigin } from '@/lib/market/result';
 
 /**
  * O carimbo de honestidade. Toda tela que mostra número mostra isto.
  *
- * Diz "consultado", não "atualizado": a fonte não devolve o horário do pregão
- * na listagem, então afirmar a hora da cotação seria inventar precisão. O que
+ * Diz "consultado", não "atualizado": a fonte não devolve o horário do pregão na
+ * listagem, então afirmar a hora da cotação seria inventar precisão. O que
  * sabemos com certeza é quando **nós** consultamos.
+ *
+ * Três procedências, e nenhuma se disfarça de outra: ao vivo, exemplo (dado
+ * capturado, de desenvolvimento) e reserva (a fonte falhou).
  */
 
 interface DataStampProps {
@@ -24,7 +27,13 @@ const PHASE_LABEL = {
   closed: 'Mercado fechado',
 } as const;
 
+const SOURCE_LABEL = {
+  fixture: 'dado de exemplo',
+  snapshot: 'dado de reserva',
+} as const;
+
 export function DataStamp({ origin, status, now = new Date(), className }: DataStampProps) {
+  const live = isLiveData(origin);
   const closedSince = `fechamento de ${formatWeekday(status.lastClose)}, ${formatDayMonth(
     status.lastClose,
   )}, ${formatClock(status.lastClose)}`;
@@ -36,7 +45,7 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
           aria-hidden="true"
           className={cn(
             'size-1.5 rounded-full',
-            status.isOpen ? 'bg-positive' : 'bg-border-strong',
+            status.isOpen && live ? 'bg-positive' : 'bg-border-strong',
           )}
         />
         {PHASE_LABEL[status.phase]}
@@ -44,7 +53,7 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
 
       <span aria-hidden="true">·</span>
 
-      {status.isOpen ? (
+      {status.isOpen && live ? (
         <span>
           consultado{' '}
           <time dateTime={origin.fetchedAt}>{formatRelativeTime(origin.fetchedAt, now)}</time>
@@ -53,7 +62,14 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
         <span>{closedSince}</span>
       )}
 
-      {origin.fallback && (
+      {!live && origin.provider !== 'brapi' && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span className="text-negative font-medium">{SOURCE_LABEL[origin.provider]}</span>
+        </>
+      )}
+
+      {!live && origin.provider === 'brapi' && (
         <>
           <span aria-hidden="true">·</span>
           <span className="text-negative font-medium">dado de reserva</span>
@@ -64,14 +80,21 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
 }
 
 /**
- * Aviso de fallback. Aparece quando a fonte viva não respondeu e a tela está
- * sendo servida pelo snapshot versionado.
+ * Aviso de procedência. Aparece sempre que o dado na tela **não** é o mercado ao
+ * vivo, e diz qual dos dois casos é.
  *
  * A regra que ele materializa: ninguém encontra tela de erro, e ninguém vê dado
- * velho apresentado como fresco.
+ * velho apresentado como fresco. O segundo caso é o que dói mais, porque é
+ * silencioso.
  */
-export function FallbackNotice({ origin }: { readonly origin: DataOrigin }) {
-  if (!origin.fallback) return null;
+export function DataOriginNotice({ origin }: { readonly origin: DataOrigin }) {
+  if (isLiveData(origin)) return null;
+
+  const captured = (
+    <time dateTime={origin.fetchedAt}>
+      {formatDayMonth(origin.fetchedAt)}, {formatClock(origin.fetchedAt)}
+    </time>
+  );
 
   return (
     <aside
@@ -79,12 +102,18 @@ export function FallbackNotice({ origin }: { readonly origin: DataOrigin }) {
       role="note"
       className="border-border bg-bg-subtle text-text-secondary rounded-md border px-3 py-2 text-sm"
     >
-      <strong className="text-text font-medium">Dado de reserva.</strong> A fonte não respondeu
-      agora, então estes preços são de{' '}
-      <time dateTime={origin.fetchedAt}>
-        {formatDayMonth(origin.fetchedAt)}, {formatClock(origin.fetchedAt)}
-      </time>
-      . Não são a cotação de agora.
+      {origin.provider === 'fixture' ? (
+        <>
+          <strong className="text-text font-medium">Dado de exemplo.</strong> Esta instalação está
+          servindo o conjunto capturado em {captured}, com um recorte do mercado — não é o mercado
+          ao vivo.
+        </>
+      ) : (
+        <>
+          <strong className="text-text font-medium">Dado de reserva.</strong> A fonte não respondeu
+          agora, então estes preços são de {captured}. Não são a cotação de agora.
+        </>
+      )}
     </aside>
   );
 }

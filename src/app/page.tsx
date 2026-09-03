@@ -1,6 +1,6 @@
 import { InstrumentTable } from '@/components/market/instrument-table';
 import { TableFilters } from '@/components/market/table-filters';
-import { DataStamp, FallbackNotice } from '@/components/state/data-stamp';
+import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { EmptyState } from '@/components/state/empty-state';
 import { Container } from '@/components/ui/container';
 import { OVERVIEW_ROW_LIMIT } from '@/lib/constants';
@@ -48,7 +48,7 @@ export default async function MarketPage({
         <DataStamp origin={origin} status={status} />
       </header>
 
-      <FallbackNotice origin={origin} />
+      <DataOriginNotice origin={origin} />
 
       <TableFilters state={state} basePath="/" />
 

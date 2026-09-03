@@ -133,6 +133,13 @@ test.describe('estado de dado', () => {
     await expect(page.getByText(/Mercado (aberto|fechado)|Pré-abertura/).first()).toBeVisible();
   });
 
+  test('dado que não é ao vivo se declara — a suíte roda em fixture', async ({ page }) => {
+    for (const route of ['/', '/ativo/PETR4', '/lista?ativos=HGLG11']) {
+      await page.goto(route);
+      await expect(page.getByRole('note').filter({ hasText: 'Dado de exemplo' })).toBeVisible();
+    }
+  });
+
   test('ticker fora do universo cai em 404 desenhado, com caminho de volta', async ({ page }) => {
     await page.goto('/ativo/ZZZZ9');
     await expect(page.getByRole('heading', { name: 'Não encontramos esta página' })).toBeVisible();

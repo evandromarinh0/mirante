@@ -18,6 +18,8 @@ const universe = fixtureUniverse.instruments as readonly Instrument[];
 const series = fixtureSeries.series as Record<string, Series | undefined>;
 
 function fixtureOrigin() {
+  // 'fallback' segue significando 'a fonte viva falhou'; quem marca este dado
+  // como não-ao-vivo é o provider, e a UI lê isso por isLiveData.
   return {
     provider: 'fixture' as const,
     fetchedAt: fixtureUniverse.capturedAt,

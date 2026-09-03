@@ -37,6 +37,19 @@ export function isOk<T>(result: Result<T>): result is Extract<Result<T>, { ok: t
   return result.ok;
 }
 
+/**
+ * Só o provider de produção entrega mercado ao vivo. Fixture é dado capturado e
+ * snapshot é reserva — os dois são antigos, e a tela **precisa** dizer isso.
+ *
+ * Existe porque a produção já serviu fixture parecendo ao vivo: um deployment
+ * sem as variáveis mostrou 24 ativos com carimbo de dado fresco, e a única forma
+ * de perceber foi comparar tickers por fora. Estado que engana em silêncio é
+ * pior que erro, e este é o produto que promete o contrário.
+ */
+export function isLiveData(origin: DataOrigin): boolean {
+  return origin.provider === 'brapi' && !origin.fallback;
+}
+
 /** Mensagens em pt-BR. Ficam aqui porque todo estado de erro as reusa. */
 export const FAILURE_MESSAGES: Record<FailureReason, string> = {
   unavailable: 'A fonte de dados não respondeu.',

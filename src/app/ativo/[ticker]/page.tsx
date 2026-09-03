@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { SectionError } from '@/components/state/error-state';
-import { DataStamp, FallbackNotice } from '@/components/state/data-stamp';
+import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { SeriesTable } from '@/components/market/series-table';
 import { Container } from '@/components/ui/container';
 import { ValueChange } from '@/components/ui/value-change';
@@ -86,7 +86,7 @@ export default async function InstrumentPage({ params, searchParams }: PageProps
         <DataStamp origin={origin} status={status} />
       </header>
 
-      <FallbackNotice origin={origin} />
+      <DataOriginNotice origin={origin} />
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">

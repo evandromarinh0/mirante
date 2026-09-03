@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DataStamp, FallbackNotice } from '@/components/state/data-stamp';
+import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { EmptyState } from '@/components/state/empty-state';
 import { SectionError } from '@/components/state/error-state';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { ValueChange } from '@/components/ui/value-change';
 import { getMarketStatus } from '@/lib/market/market-status';
+import { isLiveData } from '@/lib/market/result';
 import { site } from '@/lib/site';
 
 const NOW = new Date('2026-09-03T13:10:00Z'); // pregão aberto
@@ -77,15 +78,43 @@ describe('DataStamp', () => {
   });
 });
 
-describe('FallbackNotice', () => {
-  it('não aparece quando o dado é da fonte viva', () => {
-    const { container } = render(<FallbackNotice origin={origin()} />);
+describe('procedência do dado', () => {
+  // A produção já serviu fixture parecendo ao vivo. Estes testes existem para
+  // que dado não-ao-vivo nunca volte a passar por fresco.
+  it('não avisa nada quando o dado é do mercado ao vivo', () => {
+    const { container } = render(<DataOriginNotice origin={origin()} />);
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('quando aparece, diz que não é a cotação de agora', () => {
-    render(<FallbackNotice origin={origin({ provider: 'snapshot', fallback: true })} />);
+  it('reserva diz que não é a cotação de agora', () => {
+    render(<DataOriginNotice origin={origin({ provider: 'snapshot', fallback: true })} />);
     expect(screen.getByRole('note')).toHaveTextContent(/não são a cotação de agora/i);
+  });
+
+  it('fixture se identifica como exemplo, não como mercado ao vivo', () => {
+    render(<DataOriginNotice origin={origin({ provider: 'fixture' })} />);
+    expect(screen.getByRole('note')).toHaveTextContent(/Dado de exemplo/i);
+    expect(screen.getByRole('note')).toHaveTextContent(/não é o mercado ao vivo/i);
+  });
+
+  it('o carimbo rotula exemplo mesmo com o pregão aberto', () => {
+    render(
+      <DataStamp
+        origin={origin({ provider: 'fixture' })}
+        status={getMarketStatus(NOW)}
+        now={NOW}
+      />,
+    );
+    expect(screen.getByText('dado de exemplo')).toBeInTheDocument();
+    // Com dado capturado, 'consultado há 2 minutos' seria mentira.
+    expect(screen.queryByText(/há 2 minutos/)).not.toBeInTheDocument();
+  });
+
+  it('isLiveData só aceita a fonte de produção', () => {
+    expect(isLiveData(origin())).toBe(true);
+    expect(isLiveData(origin({ provider: 'fixture' }))).toBe(false);
+    expect(isLiveData(origin({ provider: 'snapshot', fallback: true }))).toBe(false);
+    expect(isLiveData(origin({ fallback: true }))).toBe(false);
   });
 });
 
