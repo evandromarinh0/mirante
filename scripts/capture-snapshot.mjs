@@ -45,6 +45,10 @@ function absoluteChange(close, pct) {
 function toInstrument(item) {
   const kind = item.type === 'stock' ? 'stock' : item.subType === 'fii' ? 'reit' : null;
   if (!kind || item.close == null) return null;
+  // Mercado fracionário fica fora do universo (docs/decisions/0006). Mesma regra
+  // de isFractionalTicker no mapper de produção: ticker canônico termina em
+  // dígito de classe, então terminar em letra basta.
+  if (/[BF]$/.test(item.stock)) return null;
   const changePercent = item.change ?? 0;
   return {
     symbol: item.stock,

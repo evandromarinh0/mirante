@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { formatPercent, formatRelativeTime, formatSignedCurrency } from '@/lib/format';
 import { isValidSymbol, normalizeSymbol } from '@/lib/market/provider';
-import { toCandle, toFailureReason, toInstrument } from '@/lib/market/providers/brapi/mappers';
+import {
+  isFractionalTicker,
+  toCandle,
+  toFailureReason,
+  toInstrument,
+} from '@/lib/market/providers/brapi/mappers';
 import { resolveProviderId } from '@/lib/market/providers';
 import { computeStats } from '@/lib/services/market-service';
 import { fixtureProvider } from '@/lib/market/providers/fixture-provider';
@@ -58,6 +63,38 @@ describe('mapeamento da fonte para o domínio', () => {
     // Recurso de plano pago é indisponibilidade, não erro de quem visita.
     expect(toFailureReason(403, 'FEATURE_NOT_AVAILABLE')).toBe('unavailable');
     expect(toFailureReason(400, 'INVALID_RANGE')).toBe('unavailable');
+  });
+});
+
+describe('mercado fracionário fica fora do universo', () => {
+  // Decisão 0006. A fonte devolve BBAS3 e BBAS3F com o mesmo nome e o mesmo
+  // valor de mercado, sem campo que os distinga — só o sufixo.
+  const fractional = (stock: string) => ({ stock, close: 10, change: 1, type: 'stock' });
+
+  it.each(['PETR4F', 'BBAS3F', 'AALR3F', 'ABCB10F'])('exclui %s', (stock) => {
+    expect(toInstrument(fractional(stock))).toBeNull();
+  });
+
+  it.each(['EQMA3BF', 'MRSA3BF', 'MRSA5BF'])('exclui %s, do grupo B/BF', (stock) => {
+    expect(toInstrument(fractional(stock))).toBeNull();
+  });
+
+  it.each(['PETR4', 'BBAS3', 'B3SA3', 'HGLG11'])('mantém %s', (stock) => {
+    expect(toInstrument(fractional(stock))?.symbol).toBe(stock);
+  });
+
+  it('mantém FII fracionário fora, e o FII normal dentro', () => {
+    const base = { close: 100, change: 0.5, type: 'fund', subType: 'fii' };
+    expect(toInstrument({ ...base, stock: 'HGLG11' })?.kind).toBe('reit');
+    expect(toInstrument({ ...base, stock: 'HGLG11F' })).toBeNull();
+  });
+
+  it('reconhece o sufixo pelo que o ticker canônico nunca faz: terminar em letra', () => {
+    expect(isFractionalTicker('PETR4F')).toBe(true);
+    expect(isFractionalTicker('EQMA3BF')).toBe(true);
+    expect(isFractionalTicker('PETR4')).toBe(false);
+    expect(isFractionalTicker('B3SA3')).toBe(false);
+    expect(isFractionalTicker('ABCB10')).toBe(false);
   });
 });
 

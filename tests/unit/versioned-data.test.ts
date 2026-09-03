@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { isValidSymbol } from '@/lib/market/provider';
 import { seriesFileSchema, universeFileSchema } from '@/lib/market/schemas';
 
 /**
@@ -34,7 +35,33 @@ describe('snapshot de reserva', () => {
     const kinds = new Set(parsed.instruments.map((instrument) => instrument.kind));
 
     expect(kinds).toEqual(new Set(['stock', 'reit']));
-    expect(parsed.instruments.length).toBeGreaterThan(500);
+
+    // 714 ativos: 377 ações e 337 FIIs, depois de o mercado fracionário sair do
+    // universo (0006). Eram 1.120 antes da regra. O número está aqui de
+    // propósito: se ele mudar sozinho, a captura mudou de comportamento.
+    expect(parsed.instruments.length).toBe(714);
+  });
+
+  it('não contém nenhum ticker de mercado fracionário', () => {
+    const parsed = universeFileSchema.parse(data);
+    const fractional = parsed.instruments
+      .map((instrument) => instrument.symbol)
+      .filter((symbol) => /[BF]$/.test(symbol));
+
+    expect(fractional, `fracionários no snapshot: ${fractional.slice(0, 5).join(', ')}`).toEqual(
+      [],
+    );
+  });
+
+  it('todo ativo listado pode ser aberto — exceto o caso conhecido', () => {
+    const parsed = universeFileSchema.parse(data);
+    const unopenable = parsed.instruments
+      .map((instrument) => instrument.symbol)
+      .filter((symbol) => !isValidSymbol(symbol));
+
+    // BRAX é o único que sobra: a fonte o devolve sem dígito de classe. Não é
+    // fracionário e está registrado como caso à parte em 0006.
+    expect(unopenable).toEqual(['BRAX']);
   });
 
   it('não tem ticker repetido', () => {
@@ -56,6 +83,15 @@ describe('universo de fixture', () => {
   it('passa de uma página, para a paginação ser exercitada pelo e2e', () => {
     const parsed = universeFileSchema.parse(data);
     expect(parsed.instruments.length).toBeGreaterThan(50);
+  });
+
+  it('também não contém fracionário, e tudo nela abre', () => {
+    const parsed = universeFileSchema.parse(data);
+
+    for (const instrument of parsed.instruments) {
+      expect(/[BF]$/.test(instrument.symbol), `${instrument.symbol} é fracionário`).toBe(false);
+      expect(isValidSymbol(instrument.symbol), `${instrument.symbol} não abre`).toBe(true);
+    }
   });
 
   it('contém os tickers de que os testes dependem', () => {

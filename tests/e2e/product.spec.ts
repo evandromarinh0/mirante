@@ -308,7 +308,7 @@ test.describe('paginação e busca instantânea', () => {
     await page.goto('/?pagina=2');
     await page.getByRole('link', { name: 'FIIs' }).click();
     await expect(page).not.toHaveURL(/pagina=2/);
-    await expect(page.locator('table caption').first()).toContainText('17 ativos');
+    await expect(page.locator('table caption').first()).toContainText('25 ativos');
   });
 
   test('busca filtra enquanto se digita, sem recarregar a página', async ({ page }) => {
@@ -382,6 +382,64 @@ test.describe('erro e acessibilidade da busca', () => {
       await expect(page.getByText('Application error')).toHaveCount(0);
       await expect(page.getByTestId('disclaimer')).toBeVisible();
     }
+  });
+});
+
+test.describe('mercado fracionário fora do universo', () => {
+  // Decisão 0006: a exclusão acontece no mapper, então nenhuma tela precisa
+  // saber da regra. Estes testes verificam as telas mesmo assim, porque o valor
+  // da regra está justamente em nenhuma delas ter exceção.
+  test('a busca não devolve ticker fracionário', async ({ page }) => {
+    for (const query of ['PETR4F', 'AALR3F', 'ABEV3F']) {
+      await page.goto(`/?busca=${query}`);
+      await expect(page.getByText('Nenhum ativo corresponde à busca.')).toBeVisible();
+    }
+  });
+
+  test('buscar a raiz devolve só o ativo normal, sem a linha duplicada', async ({ page }) => {
+    await page.goto('/?busca=PETR4');
+
+    await expect(page.getByRole('link', { name: 'PETR4', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'PETR4F' })).toHaveCount(0);
+  });
+
+  test('nenhuma linha da tabela leva a ticker fracionário', async ({ page }) => {
+    await page.goto('/');
+    const hrefs = await page
+      .locator('table a[href^="/ativo/"]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''));
+
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.filter((href) => /[BF]$/.test(href))).toEqual([]);
+  });
+
+  test('o sitemap não anuncia rota de ticker fracionário', async ({ page }) => {
+    const response = await page.request.get('/sitemap.xml');
+    expect(response.status()).toBe(200);
+
+    const xml = await response.text();
+    const routes = [...xml.matchAll(/<loc>[^<]*\/ativo\/([^<]+)<\/loc>/g)].map((match) => match[1]);
+
+    expect(routes.length).toBeGreaterThan(100);
+    expect(routes.filter((symbol) => /[BF]$/.test(symbol ?? ''))).toEqual([]);
+  });
+
+  test('ativo normal continua abrindo, inclusive o de raiz com dígito', async ({ page }) => {
+    await page.goto('/ativo/PETR4');
+    await expect(page.getByRole('img', { name: /Preço de PETR4/ })).toBeVisible();
+  });
+
+  test('a lista de acompanhamento segue funcionando para ativo válido', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await page.getByRole('button', { name: 'Acompanhar MXRF11' }).click();
+
+    await page.goto('/lista');
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'MXRF11' })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
   });
 });
 

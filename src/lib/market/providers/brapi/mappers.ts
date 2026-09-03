@@ -26,11 +26,29 @@ function absoluteChange(close: number, changePercent: number): number {
   return (close * changePercent) / denominator;
 }
 
+/**
+ * Ticker do mercado fracionário: o mesmo ativo negociado em lote menor.
+ *
+ * A fonte devolve `BBAS3` e `BBAS3F` lado a lado, com o mesmo nome e o mesmo
+ * valor de mercado, sem nenhum campo que os distinga — só o sufixo. São 406 no
+ * universo, com sufixo `F`, `B` ou `BF`.
+ *
+ * Ficam fora do produto por decisão registrada em `docs/decisions/0006`. Um
+ * ticker canônico termina sempre em dígito de classe, então terminar em letra é
+ * o teste suficiente e não corre risco de excluir ativo normal.
+ */
+export function isFractionalTicker(symbol: string): boolean {
+  return /[BF]$/.test(symbol);
+}
+
 export function toInstrument(item: BrapiListItem): Instrument | null {
   const kind = toInstrumentKind(item);
   if (kind === null) return null;
   // Ativo sem preço não é linha de tabela: seria uma célula vazia fingindo dado.
   if (item.close == null) return null;
+  // Excluído aqui, na fronteira, e em nenhum outro lugar: a tabela, a busca, a
+  // lista e o sitemap saem todos do universo, então uma regra basta.
+  if (isFractionalTicker(item.stock)) return null;
 
   const changePercent = item.change ?? 0;
 
