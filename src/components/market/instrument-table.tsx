@@ -58,6 +58,8 @@ interface InstrumentTableProps {
   /** Rota base dos links de ordenação: a tabela serve `/` e `/lista`. */
   readonly basePath: string;
   readonly total: number;
+  /** Recorte exibido, quando a tabela está paginada. */
+  readonly range?: { readonly first: number; readonly last: number };
   /** Ação de linha da lista de acompanhamento. */
   readonly showWatchButton?: boolean;
   /** Parâmetros de URL a preservar nos links de ordenação. */
@@ -69,6 +71,7 @@ export function InstrumentTable({
   state,
   basePath,
   total,
+  range,
   showWatchButton = true,
   keepParams = {},
 }: InstrumentTableProps) {
@@ -85,10 +88,8 @@ export function InstrumentTable({
     >
       <table className="w-full border-collapse text-sm">
         <caption className="text-text-muted border-border bg-bg-subtle border-b px-[var(--cell-padding-x)] py-2 text-left text-xs">
-          {instruments.length === total
-            ? `${total} ativos`
-            : `${instruments.length} de ${total} ativos`}{' '}
-          · ordenado por {orderLabel}
+          {total.toLocaleString('pt-BR')} ativos · ordenado por {orderLabel}
+          {range && total > instruments.length && ` · mostrando ${range.first}–${range.last}`}
         </caption>
 
         <thead>

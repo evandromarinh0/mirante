@@ -1,12 +1,13 @@
 import { InstrumentTable } from '@/components/market/instrument-table';
+import { Pagination } from '@/components/market/pagination';
 import { TableFilters } from '@/components/market/table-filters';
 import { DataStamp, DataOriginNotice } from '@/components/state/data-stamp';
 import { EmptyState } from '@/components/state/empty-state';
 import { Container } from '@/components/ui/container';
-import { OVERVIEW_ROW_LIMIT } from '@/lib/constants';
 import {
   applyTableState,
   emptyCause,
+  paginate,
   parseTableState,
   type RawSearchParams,
 } from '@/lib/market/table-state';
@@ -35,10 +36,10 @@ export default async function MarketPage({
   const { instruments, origin, status } = await getMarketOverview();
 
   const matching = applyTableState(instruments, state);
-  // A lista completa passa de mil ativos; a home mostra a primeira página dela.
-  // Paginação e filtragem instantânea são a etapa seguinte, e a URL já é a
-  // fonte de verdade para as duas.
-  const visible = matching.slice(0, OVERVIEW_ROW_LIMIT);
+  // Paginar no servidor, não virtualizar no cliente: o universo passa de mil
+  // ativos, e mandar todos para o navegador para esconder 95% deles seria
+  // pagar payload por nada. A página fica na URL como o resto do estado.
+  const page = paginate(matching, state.page);
   const cause = emptyCause(state);
 
   return (
@@ -52,7 +53,7 @@ export default async function MarketPage({
 
       <TableFilters state={state} basePath="/" />
 
-      {visible.length === 0 ? (
+      {page.rows.length === 0 ? (
         <EmptyState
           title={cause ? EMPTY_COPY[cause] : 'Nenhum ativo disponível agora.'}
           description={
@@ -65,17 +66,13 @@ export default async function MarketPage({
       ) : (
         <>
           <InstrumentTable
-            instruments={visible}
+            instruments={page.rows}
             state={state}
             basePath="/"
-            total={matching.length}
+            total={page.total}
+            range={{ first: page.firstIndex, last: page.lastIndex }}
           />
-          {matching.length > visible.length && (
-            <p className="text-text-muted text-xs">
-              Mostrando os {visible.length} primeiros de {matching.length}. Use a busca ou o filtro
-              de classe para chegar a um ativo específico.
-            </p>
-          )}
+          <Pagination page={page} state={state} basePath="/" />
         </>
       )}
     </Container>

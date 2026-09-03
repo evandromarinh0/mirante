@@ -105,6 +105,87 @@ test.describe('lista de acompanhamento', () => {
   });
 });
 
+test.describe('paginação e busca instantânea', () => {
+  test('a página vive na URL e navega para frente e para trás', async ({ page }) => {
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Paginação da tabela' });
+    await expect(nav).toContainText('página 1 de 2');
+    await expect(nav.getByRole('link', { name: 'Anterior' })).toHaveCount(0);
+
+    await nav.getByRole('link', { name: 'Próxima' }).click();
+    await expect(page).toHaveURL(/pagina=2/);
+    await expect(nav).toContainText('página 2 de 2');
+
+    await nav.getByRole('link', { name: 'Anterior' }).click();
+    await expect(page).not.toHaveURL(/pagina=2/);
+    await expect(nav).toContainText('página 1 de 2');
+  });
+
+  test('reordenar volta para a primeira página', async ({ page }) => {
+    await page.goto('/?pagina=2');
+    await page.getByRole('link', { name: /ordenar por preço/ }).click();
+    await expect(page).not.toHaveURL(/pagina=2/);
+  });
+
+  test('página fora do intervalo mostra a última, não uma tabela vazia', async ({ page }) => {
+    await page.goto('/?pagina=99');
+    await expect(page.getByRole('navigation', { name: 'Paginação da tabela' })).toContainText(
+      'página 2 de 2',
+    );
+    await expect(page.getByRole('table').first()).toBeVisible();
+  });
+
+  test('filtrar por classe reduz o total e volta para a primeira página', async ({ page }) => {
+    await page.goto('/?pagina=2');
+    await page.getByRole('link', { name: 'FIIs' }).click();
+    await expect(page).not.toHaveURL(/pagina=2/);
+    await expect(page.locator('table caption').first()).toContainText('17 ativos');
+  });
+
+  test('busca filtra enquanto se digita, sem recarregar a página', async ({ page }) => {
+    await page.goto('/');
+    const field = page.getByLabel('Buscar por código ou nome');
+
+    await field.fill('HGLG');
+    await expect(page).toHaveURL(/busca=HGLG/);
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+
+    // O campo mantém o que foi digitado depois da navegação.
+    await expect(field).toHaveValue('HGLG');
+  });
+
+  test('limpar a busca pelo link volta a refletir no campo', async ({ page }) => {
+    await page.goto('/?busca=ZZZZ9');
+    await expect(page.getByRole('link', { name: 'Limpar busca e filtro' })).toBeVisible();
+    await page.getByRole('link', { name: 'Limpar busca e filtro' }).click();
+
+    await expect(page.getByLabel('Buscar por código ou nome')).toHaveValue('');
+  });
+
+  test('voltar no histórico restaura a busca anterior no campo', async ({ page }) => {
+    await page.goto('/');
+    const field = page.getByLabel('Buscar por código ou nome');
+
+    await field.fill('MXRF');
+    await expect(page).toHaveURL(/busca=MXRF/);
+    await page.goto('/?busca=HGLG');
+    await expect(field).toHaveValue('HGLG');
+  });
+
+  test('a busca funciona sem JavaScript, pelo formulário', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/');
+
+    await page.getByLabel('Buscar por código ou nome').fill('HGLG11');
+    await page.getByRole('button', { name: 'Buscar' }).click();
+
+    await expect(page).toHaveURL(/busca=HGLG11/);
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await context.close();
+  });
+});
+
 test.describe('gráfico', () => {
   test('aparece no primeiro HTML, antes de qualquer JavaScript', async ({ browser }) => {
     // Gráfico que só existe depois da hidratação é retângulo vazio no primeiro

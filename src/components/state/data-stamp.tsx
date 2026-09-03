@@ -53,7 +53,17 @@ export function DataStamp({ origin, status, now = new Date(), className }: DataS
 
       <span aria-hidden="true">·</span>
 
-      {status.isOpen && live ? (
+      {/* Três frases distintas, porque três situações distintas. Dizer
+          "fechamento de quarta" ao lado de "mercado aberto" — o que acontecia
+          quando o dado não era ao vivo — é contradição na cara de quem lê. */}
+      {!live ? (
+        <span>
+          capturado em{' '}
+          <time dateTime={origin.fetchedAt}>
+            {formatDayMonth(origin.fetchedAt)}, {formatClock(origin.fetchedAt)}
+          </time>
+        </span>
+      ) : status.isOpen ? (
         <span>
           consultado{' '}
           <time dateTime={origin.fetchedAt}>{formatRelativeTime(origin.fetchedAt, now)}</time>

@@ -96,12 +96,12 @@ npm run snapshot       # re-capture the versioned universe snapshot (needs a tok
 
 Copy `.env.example` to `.env.local`.
 
-| Variable               | Meaning                                                         |
-| ---------------------- | --------------------------------------------------------------- |
-| `BRAPI_TOKEN`          | Server-only. Never `NEXT_PUBLIC_`, never committed.             |
-| `MARKET_PROVIDER`      | `brapi` \| `fixture` \| `snapshot`. Defaults by token presence. |
-| `NEXT_PUBLIC_SITE_URL` | Absolute URLs for metadata, canonical, OG and sitemap.          |
-| `SITE_INDEXABLE`       | Only `true` allows indexing. Off until there is a domain.       |
+| Variable          | Meaning                                                             |
+| ----------------- | ------------------------------------------------------------------- |
+| `BRAPI_TOKEN`     | Server-only. Never `NEXT_PUBLIC_`, never committed.                 |
+| `MARKET_PROVIDER` | `brapi` \| `fixture` \| `snapshot`. Defaults by token presence.     |
+| `SITE_URL`        | Absolute URLs for metadata, canonical, OG and sitemap. Server-only. |
+| `SITE_INDEXABLE`  | Only `true` allows indexing. Off until there is a domain.           |
 
 Without a token the app runs on `fixture` — real data captured once, so
 development and CI need neither network nor quota.

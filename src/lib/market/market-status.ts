@@ -1,4 +1,4 @@
-import { isHoliday, SAO_PAULO_UTC_OFFSET_HOURS, SESSION } from './b3-calendar';
+import { isHoliday, SAO_PAULO_UTC_OFFSET_HOURS, SESSION, sessionOverride } from './b3-calendar';
 
 /**
  * "O pregão está aberto?" — função pura, e a mais testada do projeto.
@@ -67,16 +67,26 @@ function nextTradingDay(shifted: Date): Date {
   return cursor;
 }
 
+/** Horário de abertura do dia: a quarta-feira de cinzas abre às 13:00. */
+function sessionOf(shifted: Date): { preOpenStartMinutes: number; openMinutes: number } {
+  return sessionOverride(isoDay(shifted)) ?? SESSION;
+}
+
+function openMinutesOf(shifted: Date): number {
+  return sessionOf(shifted).openMinutes;
+}
+
 export function getMarketStatus(now: Date): MarketStatus {
   const local = toSaoPaulo(now);
   const minutes = local.getUTCHours() * 60 + local.getUTCMinutes();
   const tradingToday = isTradingDay(local);
+  const session = sessionOf(local);
 
   const phase: MarketPhase = !tradingToday
     ? 'closed'
-    : minutes >= SESSION.openMinutes && minutes < SESSION.closeMinutes
+    : minutes >= session.openMinutes && minutes < SESSION.closeMinutes
       ? 'open'
-      : minutes >= SESSION.preOpenStartMinutes && minutes < SESSION.openMinutes
+      : minutes >= session.preOpenStartMinutes && minutes < session.openMinutes
         ? 'pre-open'
         : 'closed';
 
@@ -86,11 +96,12 @@ export function getMarketStatus(now: Date): MarketStatus {
     ? atMinutes(local, SESSION.closeMinutes)
     : atMinutes(previousTradingDay(local), SESSION.closeMinutes);
 
-  const openTodayStillAhead = tradingToday && minutes < SESSION.openMinutes;
+  const openTodayStillAhead = tradingToday && minutes < session.openMinutes;
+  const nextTrading = nextTradingDay(local);
 
   const nextOpenLocal = openTodayStillAhead
-    ? atMinutes(local, SESSION.openMinutes)
-    : atMinutes(nextTradingDay(local), SESSION.openMinutes);
+    ? atMinutes(local, session.openMinutes)
+    : atMinutes(nextTrading, openMinutesOf(nextTrading));
 
   return {
     phase,

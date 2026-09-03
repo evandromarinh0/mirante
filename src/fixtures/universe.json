@@ -182,6 +182,426 @@
       "sector": "Finance"
     },
     {
+      "symbol": "AGXY3",
+      "name": "AGROGALAXY PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 1.4,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 41600,
+      "sector": "Distribution Services"
+    },
+    {
+      "symbol": "AGXY3F",
+      "name": "AGROGALAXY PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 1.39,
+      "change": -0.06,
+      "changePercent": -4.14,
+      "volume": 593,
+      "sector": "Distribution Services"
+    },
+    {
+      "symbol": "AHEB3F",
+      "name": "SAO PAULO TURISMO S.A.",
+      "kind": "stock",
+      "price": 23,
+      "change": 1.9993,
+      "changePercent": 9.52,
+      "volume": 36,
+      "sector": "Commercial Services"
+    },
+    {
+      "symbol": "AIEC11",
+      "name": "AIEC11",
+      "kind": "reit",
+      "price": 65.51,
+      "change": 0.1308,
+      "changePercent": 0.2,
+      "volume": 1640,
+      "sector": null
+    },
+    {
+      "symbol": "AJFI11",
+      "name": "AJFI11",
+      "kind": "reit",
+      "price": 8.35,
+      "change": 0.03,
+      "changePercent": 0.36,
+      "volume": 9995,
+      "sector": null
+    },
+    {
+      "symbol": "ALLD3",
+      "name": "ALLIED TECNOLOGIA S.A.",
+      "kind": "stock",
+      "price": 5.22,
+      "change": 0.1199,
+      "changePercent": 2.35,
+      "volume": 921500,
+      "sector": "Technology Services"
+    },
+    {
+      "symbol": "ALLD3F",
+      "name": "ALLIED TECNOLOGIA S.A.",
+      "kind": "stock",
+      "price": 5.25,
+      "change": 0.0699,
+      "changePercent": 1.35,
+      "volume": 4238,
+      "sector": "Technology Services"
+    },
+    {
+      "symbol": "ALMI11",
+      "name": "ALMI11",
+      "kind": "reit",
+      "price": 639.77,
+      "change": 48.7585,
+      "changePercent": 8.25,
+      "volume": 4,
+      "sector": "Miscellaneous"
+    },
+    {
+      "symbol": "ALOS3",
+      "name": "ALLOS S.A",
+      "kind": "stock",
+      "price": 28.53,
+      "change": 1.2103,
+      "changePercent": 4.43,
+      "volume": 7907200,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ALOS3F",
+      "name": "ALLOS S.A",
+      "kind": "stock",
+      "price": 28.51,
+      "change": 1.4092,
+      "changePercent": 5.2,
+      "volume": 37357,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ALPA3",
+      "name": "ALPARGATAS S.A.",
+      "kind": "stock",
+      "price": 10.38,
+      "change": 0.3102,
+      "changePercent": 3.08,
+      "volume": 6700,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ALPA3F",
+      "name": "ALPARGATAS S.A.",
+      "kind": "stock",
+      "price": 10.36,
+      "change": 0.1601,
+      "changePercent": 1.57,
+      "volume": 454,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ALPA4",
+      "name": "ALPARGATAS S.A.",
+      "kind": "stock",
+      "price": 14.23,
+      "change": 0.2296,
+      "changePercent": 1.64,
+      "volume": 2582200,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ALPA4F",
+      "name": "ALPARGATAS S.A.",
+      "kind": "stock",
+      "price": 14.27,
+      "change": 0.3195,
+      "changePercent": 2.29,
+      "volume": 7488,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ALPK3",
+      "name": "ALLPARK EMPREENDIMENTOS PARTICIPACOES SERVICOS S.A",
+      "kind": "stock",
+      "price": 4.67,
+      "change": 0.1998,
+      "changePercent": 4.47,
+      "volume": 147900,
+      "sector": "Consumer Services"
+    },
+    {
+      "symbol": "ALPK3F",
+      "name": "ALLPARK EMPREENDIMENTOS PARTICIPACOES SERVICOS S.A",
+      "kind": "stock",
+      "price": 4.61,
+      "change": 0.2399,
+      "changePercent": 5.49,
+      "volume": 2706,
+      "sector": "Consumer Services"
+    },
+    {
+      "symbol": "ALUP11",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 33.41,
+      "change": 0.7799,
+      "changePercent": 2.39,
+      "volume": 1296300,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALUP11F",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 33.55,
+      "change": 0.6094,
+      "changePercent": 1.85,
+      "volume": 11877,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALUP3",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 11.45,
+      "change": -0.0103,
+      "changePercent": -0.09,
+      "volume": 5600,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALUP3F",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 11.75,
+      "change": 0.52,
+      "changePercent": 4.63,
+      "volume": 964,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALUP4",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 11,
+      "change": 0.2902,
+      "changePercent": 2.71,
+      "volume": 12000,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALUP4F",
+      "name": "ALUPAR INVESTIMENTO S/A",
+      "kind": "stock",
+      "price": 10.79,
+      "change": -0.2202,
+      "changePercent": -2,
+      "volume": 1520,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "ALZC11",
+      "name": "ALZC11",
+      "kind": "reit",
+      "price": 7.4,
+      "change": -0.0499,
+      "changePercent": -0.67,
+      "volume": 13152,
+      "sector": null
+    },
+    {
+      "symbol": "ALZR11",
+      "name": "ALZR11",
+      "kind": "reit",
+      "price": 9.95,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 251846,
+      "sector": "Miscellaneous"
+    },
+    {
+      "symbol": "AMAR3",
+      "name": "MARISA LOJAS S.A.",
+      "kind": "stock",
+      "price": 0.8,
+      "change": 0.07,
+      "changePercent": 9.59,
+      "volume": 763300,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "AMAR3F",
+      "name": "MARISA LOJAS S.A.",
+      "kind": "stock",
+      "price": 0.78,
+      "change": 0.04,
+      "changePercent": 5.41,
+      "volume": 3730,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "AMBP3",
+      "name": "AMBIPAR PARTICIPACOES E EMPREENDIMENTOS S/A",
+      "kind": "stock",
+      "price": 0.15,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 1840800,
+      "sector": "Commercial Services"
+    },
+    {
+      "symbol": "AMBP3F",
+      "name": "AMBIPAR PARTICIPACOES E EMPREENDIMENTOS S/A",
+      "kind": "stock",
+      "price": 0.15,
+      "change": -0.02,
+      "changePercent": -11.76,
+      "volume": 5129,
+      "sector": "Commercial Services"
+    },
+    {
+      "symbol": "AMER3",
+      "name": "AMERICANAS S.A",
+      "kind": "stock",
+      "price": 5.24,
+      "change": 0.23,
+      "changePercent": 4.59,
+      "volume": 2014700,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "AMER3F",
+      "name": "AMERICANAS S.A",
+      "kind": "stock",
+      "price": 5.14,
+      "change": 0.14,
+      "changePercent": 2.8,
+      "volume": 6799,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "AMOB3",
+      "name": "AUTOMOB PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 11.9,
+      "change": -0.0899,
+      "changePercent": -0.75,
+      "volume": 47900,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "AMOB3F",
+      "name": "AUTOMOB PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 12.04,
+      "change": 0.3903,
+      "changePercent": 3.35,
+      "volume": 3624,
+      "sector": "Retail Trade"
+    },
+    {
+      "symbol": "ANCR11",
+      "name": "ANCR11",
+      "kind": "reit",
+      "price": 270,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 1,
+      "sector": null
+    },
+    {
+      "symbol": "ANIM3",
+      "name": "ANIMA HOLDING S.A.",
+      "kind": "stock",
+      "price": 2.84,
+      "change": 0.04,
+      "changePercent": 1.43,
+      "volume": 11459600,
+      "sector": "Consumer Services"
+    },
+    {
+      "symbol": "ANIM3F",
+      "name": "ANIMA HOLDING S.A.",
+      "kind": "stock",
+      "price": 2.9,
+      "change": 0.1,
+      "changePercent": 3.57,
+      "volume": 5331,
+      "sector": "Consumer Services"
+    },
+    {
+      "symbol": "APTO11",
+      "name": "APTO11",
+      "kind": "reit",
+      "price": 7.99,
+      "change": -0.0701,
+      "changePercent": -0.87,
+      "volume": 3923,
+      "sector": null
+    },
+    {
+      "symbol": "APXM11",
+      "name": "APXM11",
+      "kind": "reit",
+      "price": 55.9,
+      "change": 1.8015,
+      "changePercent": 3.33,
+      "volume": 1406,
+      "sector": null
+    },
+    {
+      "symbol": "APXR11",
+      "name": "APXR11",
+      "kind": "reit",
+      "price": 99,
+      "change": -0.9899,
+      "changePercent": -0.99,
+      "volume": 2,
+      "sector": null
+    },
+    {
+      "symbol": "APXU11",
+      "name": "APXU11",
+      "kind": "reit",
+      "price": 99.47,
+      "change": -0.53,
+      "changePercent": -0.53,
+      "volume": 1,
+      "sector": null
+    },
+    {
+      "symbol": "ARML3",
+      "name": "ARMAC LOCAÇÃO. LOGÍSTICA E SERVIÇOS S.A.",
+      "kind": "stock",
+      "price": 3.81,
+      "change": 0.2099,
+      "changePercent": 5.83,
+      "volume": 1018800,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ARML3F",
+      "name": "ARMAC LOCAÇÃO. LOGÍSTICA E SERVIÇOS S.A.",
+      "kind": "stock",
+      "price": 3.88,
+      "change": 0.1998,
+      "changePercent": 5.43,
+      "volume": 2432,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ARND3",
+      "name": "ARND3",
+      "kind": "stock",
+      "price": 0.5,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 100,
+      "sector": "Commercial Services"
+    },
+    {
       "symbol": "HGLG11",
       "name": "HGLG11",
       "kind": "reit",

@@ -110,6 +110,23 @@ describe('procedência do dado', () => {
     expect(screen.queryByText(/há 2 minutos/)).not.toBeInTheDocument();
   });
 
+  it('não diz "mercado aberto" e "fechamento de" na mesma frase', () => {
+    // Era o que aparecia com dado capturado durante o pregão: as duas
+    // informações lado a lado, se contradizendo na cara de quem lê.
+    const { container } = render(
+      <DataStamp
+        origin={origin({ provider: 'fixture' })}
+        status={getMarketStatus(NOW)}
+        now={NOW}
+      />,
+    );
+    const text = container.textContent ?? '';
+
+    expect(text).toContain('Mercado aberto');
+    expect(text).not.toContain('fechamento de');
+    expect(text).toContain('capturado em');
+  });
+
   it('isLiveData só aceita a fonte de produção', () => {
     expect(isLiveData(origin())).toBe(true);
     expect(isLiveData(origin({ provider: 'fixture' }))).toBe(false);

@@ -110,7 +110,9 @@ for (const symbol of FIXTURE_SYMBOLS) {
 write('src/fixtures/series.json', { capturedAt, series });
 
 const fixtureUniverse = instruments.filter((i) => FIXTURE_SYMBOLS.includes(i.symbol));
-const filler = instruments.filter((i) => !FIXTURE_SYMBOLS.includes(i.symbol)).slice(0, 18);
+// 60 de preenchimento: a fixture precisa passar de uma página de 50 para que
+// a paginação seja exercitada pelo e2e.
+const filler = instruments.filter((i) => !FIXTURE_SYMBOLS.includes(i.symbol)).slice(0, 60);
 write('src/fixtures/universe.json', {
   capturedAt,
   instruments: [...fixtureUniverse, ...filler].sort((a, b) => a.symbol.localeCompare(b.symbol)),

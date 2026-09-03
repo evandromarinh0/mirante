@@ -4,6 +4,15 @@
  * O Brasil não tem horário de verão desde 2019, então `America/Sao_Paulo` é
  * UTC−3 fixo. Isso elimina a classe de bug mais comum aqui e permite aritmética
  * de fuso sem biblioteca.
+ *
+ * Fonte das datas: calendário de negociação da B3 para 2026, publicado em
+ * b3.com.br/pt_br/noticias/calendario-de-negociacao-da-b3-confira-o-funcionamento-da-bolsa-em-2026.htm
+ *
+ * A B3 publica esse calendário todo ano e avisa que ele pode mudar no meio do
+ * caminho. O que dá para derivar (feriado de data fixa e feriado móvel ligado à
+ * Páscoa) fica calculado; o que é prática da bolsa fica em tabela, com a fonte
+ * ao lado. **Nada de data chutada:** status de mercado errado é pior que status
+ * ausente.
  */
 
 export const SAO_PAULO_UTC_OFFSET_HOURS = -3;
@@ -16,7 +25,7 @@ export const SESSION = {
 } as const;
 
 /**
- * Feriados nacionais de data fixa. São de lei e não mudam de ano para ano.
+ * Feriados nacionais de data fixa. São de lei e valem todo ano.
  * Formato `MM-DD`.
  */
 const FIXED_HOLIDAYS = [
@@ -27,18 +36,24 @@ const FIXED_HOLIDAYS = [
   '10-12', // Nossa Senhora Aparecida
   '11-02', // Finados
   '11-15', // Proclamação da República
+  '11-20', // Zumbi e Consciência Negra — nacional pela Lei 14.759/2023
   '12-25', // Natal
 ] as const;
 
 /**
- * Fechamentos que não dão para derivar: exceções da B3, pregão parcial e
- * feriados cuja vigência mudou (Consciência Negra, feriados municipais que a
- * bolsa deixou de observar).
+ * Dias sem sessão de negociação que **não** são feriado nacional: é prática da
+ * B3, confirmada no calendário de 2026. Em 24 e 31 de dezembro há expediente
+ * bancário e registro de balcão, mas não há pregão.
+ */
+const B3_CLOSURES = ['12-24', '12-31'] as const;
+
+/**
+ * Exceções que só o calendário do ano revela — mudança de data, fechamento
+ * extraordinário, feriado que a bolsa deixou de observar.
  *
- * **Deliberadamente vazio.** Precisa ser transcrito do calendário oficial da B3
- * antes do deploy — a página pública só publica os anos anteriores, e inventar
- * data aqui produziria "mercado fechado" errado em produção. Enquanto estiver
- * vazio, o status erra apenas nesses dias específicos, e erra dizendo "aberto".
+ * Deliberadamente vazio: no calendário de 2026 não há nenhuma. Vale registrar o
+ * caso que mais confunde — **9 de julho, Revolução Constitucionalista, opera
+ * normalmente**: é feriado no estado de São Paulo, e a B3 não o observa mais.
  */
 export const MANUAL_CLOSURES: readonly string[] = [];
 
@@ -71,10 +86,14 @@ function toIsoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function easterDate(year: number): Date {
+  const { month, day } = easterSunday(year);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 /** Feriados móveis: derivam da Páscoa, então são calculados, não transcritos. */
 export function movableHolidays(year: number): readonly string[] {
-  const { month, day } = easterSunday(year);
-  const easter = new Date(Date.UTC(year, month - 1, day));
+  const easter = easterDate(year);
   return [
     toIsoDay(addDays(easter, -48)), // segunda de carnaval
     toIsoDay(addDays(easter, -47)), // terça de carnaval
@@ -83,12 +102,35 @@ export function movableHolidays(year: number): readonly string[] {
   ];
 }
 
-/** `date` deve ser um dia já expresso em horário de São Paulo. */
+/** Quarta-feira de cinzas: Páscoa menos 46 dias. */
+export function ashWednesday(year: number): string {
+  return toIsoDay(addDays(easterDate(year), -46));
+}
+
+/**
+ * Abertura atrasada da quarta-feira de cinzas: pré-abertura 12:45, negociação a
+ * partir de 13:00. Confirmado no calendário de 2026 e prática recorrente.
+ */
+const ASH_WEDNESDAY_SESSION = {
+  preOpenStartMinutes: 12 * 60 + 45,
+  openMinutes: 13 * 60,
+} as const;
+
+/** Horário de abertura do dia, quando difere do padrão. */
+export function sessionOverride(
+  isoDay: string,
+): { preOpenStartMinutes: number; openMinutes: number } | null {
+  const year = Number(isoDay.slice(0, 4));
+  return isoDay === ashWednesday(year) ? ASH_WEDNESDAY_SESSION : null;
+}
+
+/** `isoDay` precisa estar no dia já expresso em horário de São Paulo. */
 export function isHoliday(isoDay: string): boolean {
   const year = Number(isoDay.slice(0, 4));
   const monthDay = isoDay.slice(5);
   return (
     (FIXED_HOLIDAYS as readonly string[]).includes(monthDay) ||
+    (B3_CLOSURES as readonly string[]).includes(monthDay) ||
     movableHolidays(year).includes(isoDay) ||
     MANUAL_CLOSURES.includes(isoDay)
   );

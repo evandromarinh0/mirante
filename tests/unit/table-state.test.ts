@@ -4,6 +4,7 @@ import {
   DEFAULT_TABLE_STATE,
   emptyCause,
   parseTableState,
+  paginate,
   tableHref,
   toggleSort,
 } from '@/lib/market/table-state';
@@ -47,7 +48,7 @@ describe('parseTableState', () => {
   it('lê busca, classe, coluna e sentido', () => {
     expect(
       parseTableState({ busca: ' petr ', tipo: 'fiis', ordem: 'price', sentido: 'asc' }),
-    ).toEqual({ query: 'petr', kind: 'reit', sort: 'price', direction: 'asc' });
+    ).toEqual({ query: 'petr', kind: 'reit', sort: 'price', direction: 'asc', page: 1 });
   });
 
   it('ignora parâmetro inválido em vez de quebrar', () => {
@@ -89,6 +90,7 @@ describe('tableHref', () => {
       kind: 'stock' as const,
       sort: 'name' as const,
       direction: 'desc' as const,
+      page: 3,
     };
     const url = new URL(tableHref(state), 'https://example.com');
     expect(parseTableState(Object.fromEntries(url.searchParams))).toEqual(state);
@@ -141,5 +143,55 @@ describe('emptyCause', () => {
     expect(emptyCause({ ...DEFAULT_TABLE_STATE, query: 'x' })).toBe('query');
     expect(emptyCause({ ...DEFAULT_TABLE_STATE, kind: 'reit' })).toBe('kind');
     expect(emptyCause({ ...DEFAULT_TABLE_STATE, kind: 'reit', query: 'x' })).toBe('both');
+  });
+});
+
+describe('paginação', () => {
+  const rows = Array.from({ length: 120 }, (_, index) => index);
+
+  it('recorta a página pedida', () => {
+    const page = paginate(rows, 2, 50);
+    expect(page.rows).toHaveLength(50);
+    expect(page.rows[0]).toBe(50);
+    expect(page.firstIndex).toBe(51);
+    expect(page.lastIndex).toBe(100);
+    expect(page.totalPages).toBe(3);
+  });
+
+  it('a última página pode ser parcial', () => {
+    const page = paginate(rows, 3, 50);
+    expect(page.rows).toHaveLength(20);
+    expect(page.lastIndex).toBe(120);
+  });
+
+  it('corrige página fora do intervalo em vez de devolver vazio', () => {
+    // O número vem da URL, que é entrada de terceiro: página 99 mostra a última.
+    expect(paginate(rows, 99, 50).page).toBe(3);
+    expect(paginate(rows, -4, 50).page).toBe(1);
+  });
+
+  it('lida com lista vazia sem gerar página zero', () => {
+    const page = paginate([], 1, 50);
+    expect(page.totalPages).toBe(1);
+    expect(page.firstIndex).toBe(0);
+    expect(page.total).toBe(0);
+  });
+
+  it('a página entra na URL só a partir da segunda', () => {
+    expect(tableHref({ ...DEFAULT_TABLE_STATE, page: 1 })).toBe('/');
+    expect(tableHref({ ...DEFAULT_TABLE_STATE, page: 4 })).toBe('/?pagina=4');
+  });
+
+  it('reordenar volta para a primeira página', () => {
+    const onPageSeven = { ...DEFAULT_TABLE_STATE, page: 7 };
+    expect(toggleSort(onPageSeven, 'price').page).toBe(1);
+    expect(toggleSort({ ...onPageSeven, sort: 'price' }, 'price').page).toBe(1);
+  });
+
+  it('página inválida na URL cai na primeira', () => {
+    expect(parseTableState({ pagina: 'abc' }).page).toBe(1);
+    expect(parseTableState({ pagina: '2.5' }).page).toBe(1);
+    expect(parseTableState({ pagina: '-1' }).page).toBe(1);
+    expect(parseTableState({ pagina: '3' }).page).toBe(3);
   });
 });

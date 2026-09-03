@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { easterSunday, isHoliday, movableHolidays } from '@/lib/market/b3-calendar';
+import { ashWednesday, easterSunday, isHoliday, movableHolidays } from '@/lib/market/b3-calendar';
 import { getMarketStatus } from '@/lib/market/market-status';
 
 /**
@@ -63,6 +63,40 @@ describe('getMarketStatus', () => {
   it('depois do fechamento, o último fechamento é o do próprio dia', () => {
     const status = getMarketStatus(new Date('2026-09-03T21:00:00Z'));
     expect(status.lastClose.toISOString()).toBe('2026-09-03T20:00:00.000Z');
+  });
+});
+
+describe('calendário da B3 de 2026, conferido na fonte', () => {
+  // As três datas abaixo eram lacunas reais: o algoritmo de feriado fixo mais
+  // móvel não as cobria, e a produção diria 'mercado aberto'.
+  it('fecha em 20 de novembro, Consciência Negra', () => {
+    // sexta-feira, e feriado nacional desde a Lei 14.759/2023
+    expect(getMarketStatus(new Date('2026-11-20T14:00:00Z')).phase).toBe('closed');
+  });
+
+  it('fecha em 24 e 31 de dezembro, quando a B3 não tem pregão', () => {
+    expect(getMarketStatus(new Date('2026-12-24T14:00:00Z')).phase).toBe('closed');
+    expect(getMarketStatus(new Date('2026-12-31T14:00:00Z')).phase).toBe('closed');
+  });
+
+  it('abre 13:00 na quarta-feira de cinzas, não 10:00', () => {
+    expect(ashWednesday(2026)).toBe('2026-02-18');
+    // 11:00 local: em dia comum estaria aberto
+    expect(getMarketStatus(new Date('2026-02-18T14:00:00Z')).phase).toBe('closed');
+    // 12:50 local: pré-abertura especial
+    expect(getMarketStatus(new Date('2026-02-18T15:50:00Z')).phase).toBe('pre-open');
+    // 13:30 local
+    expect(getMarketStatus(new Date('2026-02-18T16:30:00Z')).phase).toBe('open');
+  });
+
+  it('opera normalmente em 9 de julho: a B3 não observa mais o feriado paulista', () => {
+    expect(getMarketStatus(new Date('2026-07-09T14:00:00Z')).phase).toBe('open');
+  });
+
+  it('aponta a próxima abertura da cinzas para 13:00', () => {
+    // terça de carnaval, 17 de fevereiro
+    const status = getMarketStatus(new Date('2026-02-17T14:00:00Z'));
+    expect(status.nextOpen.toISOString()).toBe('2026-02-18T16:00:00.000Z');
   });
 });
 
