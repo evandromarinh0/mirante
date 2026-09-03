@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useState, useSyncExternalStore } from 'react';
 import { WATCHLIST_STORAGE_KEY } from '@/lib/constants';
 import { isValidSymbol, normalizeSymbol } from '@/lib/market/provider';
 
@@ -89,6 +89,19 @@ export interface WatchlistApi {
    * para não afirmar "lista vazia" antes de ter lido o armazenamento.
    */
   readonly hydrated: boolean;
+  /**
+   * Verdadeiro depois da primeira alteração feita nesta sessão — marcar,
+   * desmarcar ou adotar uma lista recebida.
+   *
+   * É o que decide a precedência entre a lista local e a lista da URL
+   * (docs/decisions/0004): antes de editar, um `?ativos` recebido é estado
+   * inicial e a tela mostra o que o link trouxe; depois de editar, a lista local
+   * manda e a URL passa a ser escrita a partir dela.
+   *
+   * Vive em memória de propósito: é sobre a sessão, não sobre a lista. Guardar
+   * isso no navegador faria a segunda visita se comportar como uma edição.
+   */
+  readonly edited: boolean;
   readonly has: (symbol: string) => boolean;
   readonly toggle: (symbol: string) => void;
   readonly remove: (symbol: string) => void;
@@ -102,11 +115,13 @@ export function useWatchlist(): WatchlistApi {
     () => true,
     () => false,
   );
+  const [edited, setEdited] = useState(false);
 
   const toggle = useCallback((raw: string) => {
     const symbol = normalizeSymbol(raw);
     if (!isValidSymbol(symbol)) return;
     const current = getSnapshot();
+    setEdited(true);
     persist(
       current.includes(symbol) ? current.filter((item) => item !== symbol) : [...current, symbol],
     );
@@ -114,15 +129,17 @@ export function useWatchlist(): WatchlistApi {
 
   const remove = useCallback((raw: string) => {
     const symbol = normalizeSymbol(raw);
+    setEdited(true);
     persist(getSnapshot().filter((item) => item !== symbol));
   }, []);
 
   const replaceAll = useCallback((next: readonly string[]) => {
     const clean = next.map(normalizeSymbol).filter(isValidSymbol);
+    setEdited(true);
     persist([...new Set(clean)]);
   }, []);
 
   const has = useCallback((raw: string) => symbols.includes(normalizeSymbol(raw)), [symbols]);
 
-  return { symbols, hydrated, has, toggle, remove, replaceAll };
+  return { symbols, hydrated, edited, has, toggle, remove, replaceAll };
 }

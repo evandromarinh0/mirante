@@ -145,6 +145,135 @@ test.describe('lista de acompanhamento', () => {
   });
 });
 
+/**
+ * Precedência entre a lista local e a lista da URL — docs/decisions/0004.
+ *
+ * A regra: um `?ativos` recebido é estado inicial; a partir da primeira edição,
+ * a lista local manda e a URL passa a ser escrita a partir dela.
+ *
+ * A fixture tem ADSH11, HGLG11, MXRF11 e KNRI11, o que permite montar listas de
+ * três ativos em ordem não alfabética, como no caso que motivou a decisão.
+ */
+test.describe('precedência da lista local', () => {
+  const OFFER = 'veio de um link compartilhado';
+
+  // 1. Importar uma lista compartilhada.
+  test('importar: o link mostra a lista recebida e oferece adotar', async ({ page }) => {
+    await page.goto('/lista?ativos=HGLG11,ADSH11,MXRF11');
+
+    for (const symbol of ['HGLG11', 'ADSH11', 'MXRF11']) {
+      await expect(page.getByRole('link', { name: symbol })).toBeVisible();
+    }
+    await expect(page.getByText(OFFER)).toBeVisible();
+
+    await page.getByRole('button', { name: 'Adotar esta lista' }).click();
+
+    // Adotar é editar: a oferta sai e a lista passa a ser da pessoa.
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toBeVisible();
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+  });
+
+  // 2. Desmarcar um ativo importado — o caso do enunciado.
+  test('desmarcar um importado remove de verdade, da tela e da URL', async ({ page }) => {
+    await page.goto('/lista?ativos=HGLG11,ADSH11,MXRF11');
+    await page.getByRole('button', { name: 'Adotar esta lista' }).click();
+
+    await page.getByRole('button', { name: 'Acompanhar ADSH11' }).click();
+
+    // A linha some, e não sobrevive por continuar escrita na URL.
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toHaveCount(0);
+    await expect(page).not.toHaveURL(/ADSH11/);
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'MXRF11' })).toBeVisible();
+  });
+
+  // 3. Adicionar um novo ativo depois de importar.
+  test('adicionar depois de importar entra na lista e na URL', async ({ page }) => {
+    await page.goto('/lista?ativos=HGLG11,ADSH11');
+    await page.getByRole('button', { name: 'Adotar esta lista' }).click();
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar KNRI11' }).click();
+
+    await page.goto('/lista');
+    await expect(page.getByRole('link', { name: 'KNRI11' })).toBeVisible();
+    await expect(page).toHaveURL(/KNRI11/);
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+  });
+
+  // 4. Alterar a lista: remover um e acrescentar outro.
+  test('alterar a lista deixa exatamente o que ficou', async ({ page }) => {
+    await page.goto('/lista?ativos=HGLG11,ADSH11,MXRF11');
+    await page.getByRole('button', { name: 'Adotar esta lista' }).click();
+
+    await page.getByRole('button', { name: 'Acompanhar MXRF11' }).click();
+    await expect(page.getByRole('link', { name: 'MXRF11' })).toHaveCount(0);
+
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar KNRI11' }).click();
+
+    await page.goto('/lista');
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'KNRI11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'MXRF11' })).toHaveCount(0);
+  });
+
+  // 5. Recarregar depois da alteração.
+  test('recarregar preserva a lista alterada, não a recebida', async ({ page }) => {
+    await page.goto('/lista?ativos=HGLG11,ADSH11,MXRF11');
+    await page.getByRole('button', { name: 'Adotar esta lista' }).click();
+    await page.getByRole('button', { name: 'Acompanhar ADSH11' }).click();
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'MXRF11' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'ADSH11' })).toHaveCount(0);
+
+    // Voltar ao link original ainda importa a lista de novo, agora como oferta.
+    await page.goto('/lista?ativos=HGLG11,ADSH11,MXRF11');
+    await expect(page.getByText(OFFER)).toBeVisible();
+  });
+
+  // 6. O aviso aparece só quando faz sentido.
+  test('a oferta de adotar aparece só para lista recebida e diferente', async ({ page }) => {
+    // Lista própria, sem link: nada a oferecer.
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await page.goto('/lista');
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+
+    // Link com a mesma lista, em outra ordem: é a mesma lista.
+    await page.goto('/lista?ativos=HGLG11');
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+
+    // Link de verdade diferente: oferece.
+    await page.goto('/lista?ativos=MXRF11,KNRI11');
+    await expect(page.getByText(OFFER)).toBeVisible();
+
+    // Depois de editar, a tela é da pessoa e a oferta não faz mais sentido.
+    await page.getByRole('button', { name: 'Acompanhar MXRF11' }).click();
+    await expect(page.getByText(OFFER)).toHaveCount(0);
+  });
+
+  test('desmarcar o último ativo cai no estado vazio, sem parâmetro pendurado', async ({
+    page,
+  }) => {
+    await page.goto('/lista?ativos=HGLG11');
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await page.goto('/lista');
+    await expect(page.getByRole('link', { name: 'HGLG11' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Acompanhar HGLG11' }).click();
+    await expect(page.getByText('Sua lista está vazia.')).toBeVisible();
+    await expect(page).not.toHaveURL(/HGLG11/);
+  });
+});
+
 test.describe('paginação e busca instantânea', () => {
   test('a página vive na URL e navega para frente e para trás', async ({ page }) => {
     await page.goto('/');

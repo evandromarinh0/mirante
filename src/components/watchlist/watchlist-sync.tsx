@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { WATCHLIST_QUERY_KEY } from '@/lib/constants';
 import { parseWatchlistParam, sameWatchlist, toWatchlistParam } from '@/lib/market/watchlist-url';
@@ -9,40 +9,67 @@ import { useWatchlistContext } from './watchlist-provider';
 /**
  * Reconcilia a URL com o armazenamento local — o ponto mais sutil da lista.
  *
- * A lista é local (não há conta), mas a **visão** é da URL, para poder ser
- * renderizada no servidor e enviada por link. Isso obriga a decidir quem manda
- * em cada caso, e é aqui que fica essa decisão:
+ * A lista mora no navegador (não há conta), mas a **visão** vem da URL, para
+ * poder ser renderizada no servidor e enviada por link. Duas fontes obrigam a
+ * decidir quem manda, e a decisão está em `docs/decisions/0004`:
  *
- * - URL sem `?ativos` e lista guardada → escreve a URL com `replace`, sem criar
- *   entrada no histórico (voltar não deve desfazer uma sincronização).
- * - URL com `?ativos` diferente do guardado → a URL ganha a tela, e quem chegou
- *   pelo link decide se adota a lista. Nada é sobrescrito sem clique.
+ * **A lista local ganha a partir do momento em que a pessoa edita.** Um
+ * `?ativos` recebido é estado inicial — uma lista importada —, não fonte
+ * persistente de verdade.
+ *
+ * Em três situações:
+ *
+ * - **Editou** → a URL é reescrita a partir da lista local, sempre. Desmarcar
+ *   um ativo que veio no link o remove de verdade, em vez de ele sobreviver
+ *   porque continua escrito na URL.
+ * - **Não editou e a URL não traz lista** → escreve a lista local na URL, para
+ *   que o servidor renderize as linhas.
+ * - **Não editou e a URL traz lista diferente** → a tela mostra o que o link
+ *   trouxe e oferece adotar. Nada é sobrescrito sem clique.
+ *
+ * Todas as escritas usam `replace`: sincronizar não é navegação, e voltar no
+ * histórico não deve desfazer uma sincronização.
  */
 export function WatchlistSync() {
   const router = useRouter();
   const params = useSearchParams();
-  const { symbols, hydrated, replaceAll } = useWatchlistContext();
-  const [adopted, setAdopted] = useState(false);
+  const { symbols, hydrated, edited, replaceAll } = useWatchlistContext();
 
   const shared = params.get(WATCHLIST_QUERY_KEY);
   const sharedSymbols = parseWatchlistParam(shared ?? undefined);
+  const localParam = toWatchlistParam(symbols);
 
   useEffect(() => {
     if (!hydrated) return;
-    if (shared !== null) return;
-    if (symbols.length === 0) return;
-    router.replace(`/lista?${WATCHLIST_QUERY_KEY}=${toWatchlistParam(symbols)}`, { scroll: false });
-  }, [hydrated, router, shared, symbols]);
+
+    // Depois de editar, a lista local é a verdade: a URL a segue.
+    if (edited) {
+      if (shared !== localParam) {
+        router.replace(localParam ? `/lista?${WATCHLIST_QUERY_KEY}=${localParam}` : '/lista', {
+          scroll: false,
+        });
+      }
+      return;
+    }
+
+    // Antes de editar, a URL só é preenchida quando está sem lista nenhuma.
+    if (shared === null && symbols.length > 0) {
+      router.replace(`/lista?${WATCHLIST_QUERY_KEY}=${localParam}`, { scroll: false });
+    }
+  }, [edited, hydrated, localParam, router, shared, symbols.length]);
 
   /**
-   * Comparação por conjunto, não por string concatenada. A versão anterior
-   * comparava a ordem da URL com a lista ordenada alfabeticamente, então duas
-   * listas idênticas em ordem diferente eram declaradas diferentes — e a pessoa
-   * era avisada de que a própria lista tinha vindo de um link de outra pessoa.
+   * O aviso é sobre uma lista **importada** que ainda não foi adotada. Depois de
+   * editar ele não faz sentido: a tela passou a mostrar a lista da pessoa, e
+   * dizer que ela "veio de um link" seria falso.
+   *
+   * A comparação é por conjunto, não por string concatenada — ordem de
+   * marcação não faz duas listas iguais serem diferentes.
    */
-  const differs = sharedSymbols.length > 0 && !sameWatchlist(sharedSymbols, symbols);
+  const showImportOffer =
+    hydrated && !edited && sharedSymbols.length > 0 && !sameWatchlist(sharedSymbols, symbols);
 
-  if (!hydrated || !differs || adopted) return null;
+  if (!showImportOffer) return null;
 
   return (
     <aside
@@ -54,10 +81,7 @@ export function WatchlistSync() {
       </p>
       <button
         type="button"
-        onClick={() => {
-          replaceAll(sharedSymbols);
-          setAdopted(true);
-        }}
+        onClick={() => replaceAll(sharedSymbols)}
         className="border-border-strong text-text hover:bg-surface hit-area inline-flex items-center rounded-md border px-3 text-sm font-medium"
       >
         Adotar esta lista
