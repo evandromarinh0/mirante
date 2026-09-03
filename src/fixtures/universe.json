@@ -1,0 +1,245 @@
+{
+  "capturedAt": "2026-09-03T06:13:38.079Z",
+  "instruments": [
+    {
+      "symbol": "AALR3",
+      "name": "ALLIANÇA SAÚDE E PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 3.3,
+      "change": 0.0099,
+      "changePercent": 0.3,
+      "volume": 123300,
+      "sector": "Health Services"
+    },
+    {
+      "symbol": "AALR3F",
+      "name": "ALLIANÇA SAÚDE E PARTICIPAÇÕES S.A.",
+      "kind": "stock",
+      "price": 3.21,
+      "change": 0.1001,
+      "changePercent": 3.22,
+      "volume": 404,
+      "sector": "Health Services"
+    },
+    {
+      "symbol": "ABCB10",
+      "name": "BCO ABC BRASIL S.A.",
+      "kind": "stock",
+      "price": 24,
+      "change": 1.0401,
+      "changePercent": 4.53,
+      "volume": 600,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ABCB10F",
+      "name": "BCO ABC BRASIL S.A.",
+      "kind": "stock",
+      "price": 23.32,
+      "change": 0.3605,
+      "changePercent": 1.57,
+      "volume": 612,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ABCB4",
+      "name": "BCO ABC BRASIL S.A.",
+      "kind": "stock",
+      "price": 24.6,
+      "change": 1.0006,
+      "changePercent": 4.24,
+      "volume": 774400,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ABCB4F",
+      "name": "BCO ABC BRASIL S.A.",
+      "kind": "stock",
+      "price": 24.5,
+      "change": 0.8491,
+      "changePercent": 3.59,
+      "volume": 15705,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ABCP11",
+      "name": "ABCP11",
+      "kind": "reit",
+      "price": 73.73,
+      "change": -0.8125,
+      "changePercent": -1.09,
+      "volume": 566,
+      "sector": null
+    },
+    {
+      "symbol": "ABEV3",
+      "name": "AMBEV S.A.",
+      "kind": "stock",
+      "price": 15.6,
+      "change": 0.4293,
+      "changePercent": 2.83,
+      "volume": 45834800,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ABEV3F",
+      "name": "AMBEV S.A.",
+      "kind": "stock",
+      "price": 15.63,
+      "change": 0.4493,
+      "changePercent": 2.96,
+      "volume": 22831,
+      "sector": "Consumer Non-Durables"
+    },
+    {
+      "symbol": "ADSH11",
+      "name": "ADSH11",
+      "kind": "reit",
+      "price": 11.3,
+      "change": -0.0797,
+      "changePercent": -0.7,
+      "volume": 18213,
+      "sector": null
+    },
+    {
+      "symbol": "AERI3",
+      "name": "AERIS IND. E COM. DE EQUIP. GERACAO DE ENERGIA S/A",
+      "kind": "stock",
+      "price": 2.06,
+      "change": 0.02,
+      "changePercent": 0.98,
+      "volume": 52800,
+      "sector": "Producer Manufacturing"
+    },
+    {
+      "symbol": "AERI3F",
+      "name": "AERIS IND. E COM. DE EQUIP. GERACAO DE ENERGIA S/A",
+      "kind": "stock",
+      "price": 2.05,
+      "change": 0,
+      "changePercent": 0,
+      "volume": 2113,
+      "sector": "Producer Manufacturing"
+    },
+    {
+      "symbol": "AFHF11",
+      "name": "AFHF11",
+      "kind": "reit",
+      "price": 10.04,
+      "change": 0.01,
+      "changePercent": 0.1,
+      "volume": 1038,
+      "sector": null
+    },
+    {
+      "symbol": "AFHI11",
+      "name": "AFHI11",
+      "kind": "reit",
+      "price": 94,
+      "change": 0.4397,
+      "changePercent": 0.47,
+      "volume": 6146,
+      "sector": null
+    },
+    {
+      "symbol": "AFLT3",
+      "name": "AFLUENTE TRANSMISSÃO DE ENERGIA ELÉTRICA S/A",
+      "kind": "stock",
+      "price": 7.39,
+      "change": -0.0799,
+      "changePercent": -1.07,
+      "volume": 200,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "AFLT3F",
+      "name": "AFLUENTE TRANSMISSÃO DE ENERGIA ELÉTRICA S/A",
+      "kind": "stock",
+      "price": 7.36,
+      "change": 0.0403,
+      "changePercent": 0.55,
+      "volume": 35,
+      "sector": "Utilities"
+    },
+    {
+      "symbol": "AGRO3",
+      "name": "BRASILAGRO - CIA BRAS DE PROP AGRICOLAS",
+      "kind": "stock",
+      "price": 19.28,
+      "change": -0.1496,
+      "changePercent": -0.77,
+      "volume": 205000,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "AGRO3F",
+      "name": "BRASILAGRO - CIA BRAS DE PROP AGRICOLAS",
+      "kind": "stock",
+      "price": 19.36,
+      "change": 0.1898,
+      "changePercent": 0.99,
+      "volume": 11028,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "HGLG11",
+      "name": "HGLG11",
+      "kind": "reit",
+      "price": 147.82,
+      "change": 0.8232,
+      "changePercent": 0.56,
+      "volume": 134782,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "ITUB4",
+      "name": "ITAU UNIBANCO HOLDING S.A.",
+      "kind": "stock",
+      "price": 41.41,
+      "change": 1.5313,
+      "changePercent": 3.84,
+      "volume": 44023900,
+      "sector": "Finance"
+    },
+    {
+      "symbol": "KNRI11",
+      "name": "KNRI11",
+      "kind": "reit",
+      "price": 156.12,
+      "change": 2.1555,
+      "changePercent": 1.4,
+      "volume": 75299,
+      "sector": "Miscellaneous"
+    },
+    {
+      "symbol": "MXRF11",
+      "name": "MXRF11",
+      "kind": "reit",
+      "price": 9.18,
+      "change": -0.0304,
+      "changePercent": -0.33,
+      "volume": 2192002,
+      "sector": "Miscellaneous"
+    },
+    {
+      "symbol": "PETR4",
+      "name": "PETROLEO BRASILEIRO S.A. PETROBRAS",
+      "kind": "stock",
+      "price": 48.2,
+      "change": 1.3311,
+      "changePercent": 2.84,
+      "volume": 54091600,
+      "sector": "Energy Minerals"
+    },
+    {
+      "symbol": "VALE3",
+      "name": "VALE S.A.",
+      "kind": "stock",
+      "price": 80.8,
+      "change": 2.4978,
+      "changePercent": 3.19,
+      "volume": 32989800,
+      "sector": "Non-Energy Minerals"
+    }
+  ]
+}
