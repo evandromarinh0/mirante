@@ -24,10 +24,11 @@ import { HISTORY_RANGES } from './types';
  * - sufixo `F` (mercado fracionário) ou `B`, isolados ou combinados — 397
  *   ativos com `F`, 3 com `B`, 4 com `BF`.
  *
- * **O validador do produto (`isValidSymbol`) rejeita 410 destes 1.120**, entre
- * eles `B3SA3`. Este schema descreve o que existe no arquivo; a divergência é
- * defeito conhecido, aberto para decisão. Afrouxar aqui para casar com o
- * validador esconderia o problema em vez de mostrá-lo.
+ * O validador do produto (`isValidSymbol`) aceita a forma canônica — raiz de
+ * quatro caracteres mais um ou dois dígitos de classe — e **rejeita 407 destes
+ * 1.120**: os 406 com sufixo de mercado fracionário e `BRAX`, que a fonte manda
+ * sem dígito de classe. Este schema descreve o arquivo como ele é; a divergência
+ * é conhecida e está aberta para decisão de produto.
  */
 const symbol = z
   .string()

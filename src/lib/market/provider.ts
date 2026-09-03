@@ -28,8 +28,22 @@ export interface MarketDataProvider {
 /**
  * Ticker validado antes de sair da aplicação: impede que parâmetro de URL vire
  * caminho arbitrário na chamada externa ou envenene a chave de cache.
+ *
+ * **Formato derivado do dado real**, não suposto. Classificados os 1.120 ativos
+ * do universo por forma, um ticker da B3 é:
+ *
+ *     raiz de 4 caracteres, começando por letra, podendo conter dígito
+ *     + 1 ou 2 dígitos de classe
+ *
+ * A versão anterior exigia quatro **letras** na raiz, e por isso rejeitava
+ * `B3SA3` — a ação da própria B3 —, além de `B1003` e `P2NB34`. Os três estavam
+ * listados na tabela e davam 404 ao serem abertos.
+ *
+ * O que segue rejeitado, e é intencional enquanto a decisão não vier: os 406
+ * tickers com sufixo de mercado fracionário (`F`, `B`, `BF`), e `BRAX`, que a
+ * fonte devolve sem dígito de classe.
  */
-const SYMBOL_PATTERN = /^[A-Z]{4}\d{1,2}$/;
+const SYMBOL_PATTERN = /^[A-Z][A-Z0-9]{3}\d{1,2}$/;
 
 export function isValidSymbol(value: string): boolean {
   return SYMBOL_PATTERN.test(value);

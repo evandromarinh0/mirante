@@ -62,16 +62,68 @@ describe('mapeamento da fonte para o domínio', () => {
 });
 
 describe('validação de ticker', () => {
-  it('aceita o formato da B3 e recusa o resto', () => {
-    expect(isValidSymbol('PETR4')).toBe(true);
-    expect(isValidSymbol('HGLG11')).toBe(true);
-    expect(isValidSymbol('petr4')).toBe(false);
-    expect(isValidSymbol('../etc/passwd')).toBe(false);
-    expect(isValidSymbol('PETR4;DROP')).toBe(false);
+  /**
+   * Os casos vêm da classificação dos 1.120 ativos do universo por forma
+   * estrutural, não de suposição sobre "como é um ticker".
+   */
+  it.each([
+    ['PETR4', 'ação, classe de um dígito'],
+    ['HGLG11', 'FII, classe de dois dígitos'],
+    ['ABCB10', 'ação com classe de dois dígitos'],
+    ['B3SA3', 'dígito na raiz — a ação da própria B3'],
+    ['B1003', 'raiz quase toda numérica'],
+    ['P2NB34', 'dígito na raiz e classe de dois dígitos'],
+  ])('aceita %s (%s)', (symbol) => {
+    expect(isValidSymbol(symbol)).toBe(true);
+  });
+
+  it.each([
+    ['petr4', 'minúscula'],
+    ['../etc/passwd', 'caminho'],
+    ['PETR4;DROP', 'injeção'],
+    ['PETR4 ', 'espaço à direita'],
+    ['1PETR4', 'começa com dígito'],
+    ['PETR', 'sem dígito de classe'],
+    ['BRAX', 'sem dígito de classe, e a fonte devolve assim'],
+    ['PETR456', 'três dígitos de classe'],
+    ['PET4', 'raiz de três caracteres'],
+    ['PETRO4', 'raiz de cinco caracteres'],
+    ['', 'vazio'],
+  ])('rejeita %o (%s)', (symbol) => {
+    expect(isValidSymbol(symbol)).toBe(false);
+  });
+
+  it('rejeita o sufixo de mercado fracionário — decisão ainda em aberto', () => {
+    // Os 406 tickers com sufixo F/B/BF continuam fora até haver decisão de
+    // produto sobre incluí-los ou removê-los do universo. Este teste marca a
+    // fronteira atual: se a decisão mudar, ele muda junto, de propósito.
+    expect(isValidSymbol('PETR4F')).toBe(false);
+    expect(isValidSymbol('EQMA3BF')).toBe(false);
   });
 
   it('normaliza antes de validar', () => {
     expect(isValidSymbol(normalizeSymbol(' petr4 '))).toBe(true);
+    expect(isValidSymbol(normalizeSymbol(' b3sa3 '))).toBe(true);
+  });
+
+  it('aceita todo ticker canônico do universo versionado', async () => {
+    // O teste que teria pego o defeito: em vez de exemplos escolhidos à mão,
+    // confronta o validador com o dado que o produto realmente exibe.
+    const { readFileSync } = await import('node:fs');
+    const snapshot = JSON.parse(readFileSync('src/data/universe-snapshot.json', 'utf8')) as {
+      instruments: readonly { symbol: string }[];
+    };
+
+    const suffixed = /[BF]$/;
+    const canonical = snapshot.instruments
+      .map((instrument) => instrument.symbol)
+      .filter((symbol) => !suffixed.test(symbol) && symbol !== 'BRAX');
+
+    const rejected = canonical.filter((symbol) => !isValidSymbol(symbol));
+    expect(
+      rejected,
+      `o validador rejeita tickers que a tabela exibe: ${rejected.join(', ')}`,
+    ).toEqual([]);
   });
 });
 
