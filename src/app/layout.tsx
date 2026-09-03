@@ -12,7 +12,8 @@ import './globals.css';
 // restritiva possível, e métricas de fallback ajustadas, o que mantém o CLS ~0.
 const plexSans = IBM_Plex_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  // 500 é o peso mais forte que a identidade usa; 600 era um arquivo baixado à toa.
+  weight: ['400', '500'],
   variable: '--font-plex-sans',
   display: 'swap',
 });

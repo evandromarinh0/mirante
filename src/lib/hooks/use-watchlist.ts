@@ -104,7 +104,6 @@ export interface WatchlistApi {
   readonly edited: boolean;
   readonly has: (symbol: string) => boolean;
   readonly toggle: (symbol: string) => void;
-  readonly remove: (symbol: string) => void;
   readonly replaceAll: (symbols: readonly string[]) => void;
 }
 
@@ -127,12 +126,6 @@ export function useWatchlist(): WatchlistApi {
     );
   }, []);
 
-  const remove = useCallback((raw: string) => {
-    const symbol = normalizeSymbol(raw);
-    setEdited(true);
-    persist(getSnapshot().filter((item) => item !== symbol));
-  }, []);
-
   const replaceAll = useCallback((next: readonly string[]) => {
     const clean = next.map(normalizeSymbol).filter(isValidSymbol);
     setEdited(true);
@@ -141,5 +134,5 @@ export function useWatchlist(): WatchlistApi {
 
   const has = useCallback((raw: string) => symbols.includes(normalizeSymbol(raw)), [symbols]);
 
-  return { symbols, hydrated, edited, has, toggle, remove, replaceAll };
+  return { symbols, hydrated, edited, has, toggle, replaceAll };
 }

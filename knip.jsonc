@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+
+  // Em .jsonc, e não .json, porque exceção sem motivo escrito vira ruído
+  // tolerado — e o objetivo deste arquivo é o contrário disso.
+  "entry": [
+    "src/app/**/{page,layout,error,global-error,not-found,route,sitemap,robots}.{ts,tsx}",
+    "scripts/*.mjs",
+    "tests/**/*.{ts,tsx}",
+    "*.config.{ts,mjs}",
+  ],
+  "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs"],
+  "ignoreExportsUsedInFile": true,
+
+  // `tailwindcss` entra por `@import 'tailwindcss'` em globals.css, e o Knip não
+  // segue import de CSS. Falso positivo, não dependência morta.
+  "ignoreDependencies": ["tailwindcss"],
+
+  // Export mantido sem uso por decisão leva `@public` no próprio arquivo, com o
+  // motivo ao lado. Nada de exceção global: uma regra afrouxada aqui deixaria de
+  // pegar o próximo código morto de verdade.
+}

@@ -37,6 +37,15 @@ export function TableSkeleton({ rows = 12 }: { readonly rows?: number }) {
   );
 }
 
+/**
+ * Esqueleto da seção do gráfico.
+ *
+ * `@public` — sem uso hoje, mantido por decisão e sinalizado na revisão do
+ * bloco 2: é o fallback de `Suspense` que a etapa de streaming na home e no
+ * detalhe vai consumir. Removê-lo agora seria reescrevê-lo em seguida.
+ *
+ * @public
+ */
 export function SeriesSkeleton() {
   return (
     <div

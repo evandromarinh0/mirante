@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+  <!--
+    O símbolo da marca, nos mesmos paths de components/ui/brand-mark.tsx: traço
+    de horizonte com a plataforma elevada em voadiço.
+
+    O ícone de aba não tem `currentColor` para herdar, e a barra de abas pode ser
+    clara ou escura. Em vez de encaixar o símbolo num quadrado colorido — que a
+    identidade proíbe —, o próprio SVG responde ao tema com os dois valores de
+    latão já medidos.
+
+    Traço mais grosso que o do componente (2 contra 1.5): em 16px, 1.5 desaparece.
+  -->
+  <style>
+    :root { --mark: #705223; }
+    @media (prefers-color-scheme: dark) { :root { --mark: #d6b174; } }
+  </style>
+  <g fill="none" stroke="var(--mark)" stroke-width="2" stroke-linecap="round">
+    <path d="M1.5 16.5h21" />
+    <path d="M9 16.5v-4.25h9.5" />
+    <path d="M12.25 12.25V9.5" />
+    <path d="M15.5 12.25V10.75" />
+  </g>
+</svg>

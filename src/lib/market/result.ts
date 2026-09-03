@@ -33,10 +33,6 @@ export function fail<T>(reason: FailureReason, detail?: string): Result<T> {
   return detail === undefined ? { ok: false, reason } : { ok: false, reason, detail };
 }
 
-export function isOk<T>(result: Result<T>): result is Extract<Result<T>, { ok: true }> {
-  return result.ok;
-}
-
 /**
  * Só o provider de produção entrega mercado ao vivo. Fixture é dado capturado e
  * snapshot é reserva — os dois são antigos, e a tela **precisa** dizer isso.

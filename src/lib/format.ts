@@ -16,11 +16,6 @@ const currency = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 2,
 });
 
-const decimal = new Intl.NumberFormat('pt-BR', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
 const percent = new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -66,10 +61,6 @@ export function formatSignedCurrency(value: number): string {
 
 export function formatPercent(value: number): string {
   return `${percent.format(value)}%`;
-}
-
-export function formatDecimal(value: number): string {
-  return decimal.format(value);
 }
 
 /** Volume em notação compacta: a coluna precisa caber em 320px. */

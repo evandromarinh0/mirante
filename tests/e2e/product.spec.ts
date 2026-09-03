@@ -385,6 +385,39 @@ test.describe('erro e acessibilidade da busca', () => {
   });
 });
 
+test.describe('marca e compartilhamento', () => {
+  test('o ícone da aba existe em SVG e em PNG de fallback', async ({ page }) => {
+    // Antes deste bloco, as duas rotas davam 404 e a aba mostrava o ícone
+    // genérico do navegador.
+    for (const path of ['/icon.svg', '/icon.png']) {
+      const response = await page.request.get(path);
+      expect(response.status()).toBe(200);
+    }
+
+    await page.goto('/');
+    await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="icon"][type="image/png"]')).toHaveCount(1);
+  });
+
+  test('o cartão de Open Graph é servido e declarado nas duas convenções', async ({ page }) => {
+    const response = await page.request.get('/opengraph-image.png');
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('image/png');
+
+    await page.goto('/');
+    await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
+      'content',
+      '1200',
+    );
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      'content',
+      'summary_large_image',
+    );
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveCount(1);
+  });
+});
+
 test.describe('indexação', () => {
   test('robots bloqueia tudo enquanto não houver domínio', async ({ page }) => {
     const response = await page.goto('/robots.txt');

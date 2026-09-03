@@ -9,6 +9,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // O contrato bate na API real: fica fora do padrão, do verify e do CI.
+    // Roda com `npm run test:contract`.
     include: ['src/**/*.test.{ts,tsx}', 'tests/unit/**/*.test.{ts,tsx}'],
   },
 });
